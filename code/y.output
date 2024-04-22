@@ -1,0 +1,506 @@
+Terminals unused in grammar
+
+   IF
+   ELSE
+   FOR
+   WHILE
+   DO
+   RETURN
+   VOID
+   BREAK
+   CONTINUE
+   SWITCH
+   CASE
+   DEFAULT
+   CONST
+   STATIC
+   CLASS
+   CHAR
+   INT
+   FLOAT
+   DOUBLE
+   LONG
+   BOOL
+   NOT
+   GT
+   LT
+   GE
+   LE
+   EQ
+   NE
+   AND
+   OR
+   PLUS
+   MINUS
+   MULT
+   DIV
+   MOD
+   ASSIGN
+   PLUS_ASSIGN
+   MINUS_ASSIGN
+   MULT_ASSIGN
+   DIV_ASSIGN
+   MOD_ASSIGN
+   LBRACE
+   RBRACE
+   LBRACKET
+   RBRACKET
+   SEMICOLON
+   COMMA
+   COLON
+   DOT
+   QUESTION
+
+
+State 22 conflicts: 6 shift/reduce
+State 23 conflicts: 6 shift/reduce
+State 24 conflicts: 6 shift/reduce
+State 25 conflicts: 6 shift/reduce
+
+
+Grammar
+
+    0 $accept: PROGRAM $end
+
+    1 PROGRAM: STMT_LIST
+
+    2 STMT_LIST: STMT_LIST STMT
+    3          | STMT
+
+    4 STMT: EXPR ';'
+
+    5 EXPR: EXPR '+' EXPR
+    6     | EXPR '-' EXPR
+    7     | EXPR '*' EXPR
+    8     | EXPR '/' EXPR
+    9     | '(' EXPR ')'
+   10     | VARIABLE
+   11     | INT_LITERAL
+   12     | FLOAT_LITERAL
+   13     | STRING_LITERAL
+   14     | CHAR_LITERAL
+   15     | EXPR INC
+   16     | EXPR DEC
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'(' (40) 9
+')' (41) 9
+'*' (42) 7
+'+' (43) 5
+'-' (45) 6
+'/' (47) 8
+';' (59) 4
+error (256)
+IF (258)
+ELSE (259)
+FOR (260)
+WHILE (261)
+DO (262)
+RETURN (263)
+VOID (264)
+BREAK (265)
+CONTINUE (266)
+SWITCH (267)
+CASE (268)
+DEFAULT (269)
+CONST (270)
+STATIC (271)
+CLASS (272)
+CHAR (273)
+INT (274)
+FLOAT (275)
+DOUBLE (276)
+LONG (277)
+BOOL (278)
+NOT (279)
+GT (280)
+LT (281)
+GE (282)
+LE (283)
+EQ (284)
+NE (285)
+AND (286)
+OR (287)
+INC (288) 15
+DEC (289) 16
+PLUS (290)
+MINUS (291)
+MULT (292)
+DIV (293)
+MOD (294)
+ASSIGN (295)
+PLUS_ASSIGN (296)
+MINUS_ASSIGN (297)
+MULT_ASSIGN (298)
+DIV_ASSIGN (299)
+MOD_ASSIGN (300)
+LBRACE (301)
+RBRACE (302)
+LBRACKET (303)
+RBRACKET (304)
+SEMICOLON (305)
+COMMA (306)
+COLON (307)
+DOT (308)
+QUESTION (309)
+VARIABLE (310) 10
+INT_LITERAL (311) 11
+FLOAT_LITERAL (312) 12
+STRING_LITERAL (313) 13
+CHAR_LITERAL (314) 14
+
+
+Nonterminals, with rules where they appear
+
+$accept (67)
+    on left: 0
+PROGRAM (68)
+    on left: 1, on right: 0
+STMT_LIST (69)
+    on left: 2 3, on right: 1 2
+STMT (70)
+    on left: 4, on right: 2 3
+EXPR (71)
+    on left: 5 6 7 8 9 10 11 12 13 14 15 16, on right: 4 5 6 7 8 9
+    15 16
+
+
+state 0
+
+    0 $accept: . PROGRAM $end
+
+    VARIABLE        shift, and go to state 1
+    INT_LITERAL     shift, and go to state 2
+    FLOAT_LITERAL   shift, and go to state 3
+    STRING_LITERAL  shift, and go to state 4
+    CHAR_LITERAL    shift, and go to state 5
+    '('             shift, and go to state 6
+
+    PROGRAM    go to state 7
+    STMT_LIST  go to state 8
+    STMT       go to state 9
+    EXPR       go to state 10
+
+
+state 1
+
+   10 EXPR: VARIABLE .
+
+    $default  reduce using rule 10 (EXPR)
+
+
+state 2
+
+   11 EXPR: INT_LITERAL .
+
+    $default  reduce using rule 11 (EXPR)
+
+
+state 3
+
+   12 EXPR: FLOAT_LITERAL .
+
+    $default  reduce using rule 12 (EXPR)
+
+
+state 4
+
+   13 EXPR: STRING_LITERAL .
+
+    $default  reduce using rule 13 (EXPR)
+
+
+state 5
+
+   14 EXPR: CHAR_LITERAL .
+
+    $default  reduce using rule 14 (EXPR)
+
+
+state 6
+
+    9 EXPR: '(' . EXPR ')'
+
+    VARIABLE        shift, and go to state 1
+    INT_LITERAL     shift, and go to state 2
+    FLOAT_LITERAL   shift, and go to state 3
+    STRING_LITERAL  shift, and go to state 4
+    CHAR_LITERAL    shift, and go to state 5
+    '('             shift, and go to state 6
+
+    EXPR  go to state 11
+
+
+state 7
+
+    0 $accept: PROGRAM . $end
+
+    $end  shift, and go to state 12
+
+
+state 8
+
+    1 PROGRAM: STMT_LIST .
+    2 STMT_LIST: STMT_LIST . STMT
+
+    VARIABLE        shift, and go to state 1
+    INT_LITERAL     shift, and go to state 2
+    FLOAT_LITERAL   shift, and go to state 3
+    STRING_LITERAL  shift, and go to state 4
+    CHAR_LITERAL    shift, and go to state 5
+    '('             shift, and go to state 6
+
+    $default  reduce using rule 1 (PROGRAM)
+
+    STMT  go to state 13
+    EXPR  go to state 10
+
+
+state 9
+
+    3 STMT_LIST: STMT .
+
+    $default  reduce using rule 3 (STMT_LIST)
+
+
+state 10
+
+    4 STMT: EXPR . ';'
+    5 EXPR: EXPR . '+' EXPR
+    6     | EXPR . '-' EXPR
+    7     | EXPR . '*' EXPR
+    8     | EXPR . '/' EXPR
+   15     | EXPR . INC
+   16     | EXPR . DEC
+
+    INC  shift, and go to state 14
+    DEC  shift, and go to state 15
+    ';'  shift, and go to state 16
+    '+'  shift, and go to state 17
+    '-'  shift, and go to state 18
+    '*'  shift, and go to state 19
+    '/'  shift, and go to state 20
+
+
+state 11
+
+    5 EXPR: EXPR . '+' EXPR
+    6     | EXPR . '-' EXPR
+    7     | EXPR . '*' EXPR
+    8     | EXPR . '/' EXPR
+    9     | '(' EXPR . ')'
+   15     | EXPR . INC
+   16     | EXPR . DEC
+
+    INC  shift, and go to state 14
+    DEC  shift, and go to state 15
+    '+'  shift, and go to state 17
+    '-'  shift, and go to state 18
+    '*'  shift, and go to state 19
+    '/'  shift, and go to state 20
+    ')'  shift, and go to state 21
+
+
+state 12
+
+    0 $accept: PROGRAM $end .
+
+    $default  accept
+
+
+state 13
+
+    2 STMT_LIST: STMT_LIST STMT .
+
+    $default  reduce using rule 2 (STMT_LIST)
+
+
+state 14
+
+   15 EXPR: EXPR INC .
+
+    $default  reduce using rule 15 (EXPR)
+
+
+state 15
+
+   16 EXPR: EXPR DEC .
+
+    $default  reduce using rule 16 (EXPR)
+
+
+state 16
+
+    4 STMT: EXPR ';' .
+
+    $default  reduce using rule 4 (STMT)
+
+
+state 17
+
+    5 EXPR: EXPR '+' . EXPR
+
+    VARIABLE        shift, and go to state 1
+    INT_LITERAL     shift, and go to state 2
+    FLOAT_LITERAL   shift, and go to state 3
+    STRING_LITERAL  shift, and go to state 4
+    CHAR_LITERAL    shift, and go to state 5
+    '('             shift, and go to state 6
+
+    EXPR  go to state 22
+
+
+state 18
+
+    6 EXPR: EXPR '-' . EXPR
+
+    VARIABLE        shift, and go to state 1
+    INT_LITERAL     shift, and go to state 2
+    FLOAT_LITERAL   shift, and go to state 3
+    STRING_LITERAL  shift, and go to state 4
+    CHAR_LITERAL    shift, and go to state 5
+    '('             shift, and go to state 6
+
+    EXPR  go to state 23
+
+
+state 19
+
+    7 EXPR: EXPR '*' . EXPR
+
+    VARIABLE        shift, and go to state 1
+    INT_LITERAL     shift, and go to state 2
+    FLOAT_LITERAL   shift, and go to state 3
+    STRING_LITERAL  shift, and go to state 4
+    CHAR_LITERAL    shift, and go to state 5
+    '('             shift, and go to state 6
+
+    EXPR  go to state 24
+
+
+state 20
+
+    8 EXPR: EXPR '/' . EXPR
+
+    VARIABLE        shift, and go to state 1
+    INT_LITERAL     shift, and go to state 2
+    FLOAT_LITERAL   shift, and go to state 3
+    STRING_LITERAL  shift, and go to state 4
+    CHAR_LITERAL    shift, and go to state 5
+    '('             shift, and go to state 6
+
+    EXPR  go to state 25
+
+
+state 21
+
+    9 EXPR: '(' EXPR ')' .
+
+    $default  reduce using rule 9 (EXPR)
+
+
+state 22
+
+    5 EXPR: EXPR . '+' EXPR
+    5     | EXPR '+' EXPR .
+    6     | EXPR . '-' EXPR
+    7     | EXPR . '*' EXPR
+    8     | EXPR . '/' EXPR
+   15     | EXPR . INC
+   16     | EXPR . DEC
+
+    INC  shift, and go to state 14
+    DEC  shift, and go to state 15
+    '+'  shift, and go to state 17
+    '-'  shift, and go to state 18
+    '*'  shift, and go to state 19
+    '/'  shift, and go to state 20
+
+    INC       [reduce using rule 5 (EXPR)]
+    DEC       [reduce using rule 5 (EXPR)]
+    '+'       [reduce using rule 5 (EXPR)]
+    '-'       [reduce using rule 5 (EXPR)]
+    '*'       [reduce using rule 5 (EXPR)]
+    '/'       [reduce using rule 5 (EXPR)]
+    $default  reduce using rule 5 (EXPR)
+
+
+state 23
+
+    5 EXPR: EXPR . '+' EXPR
+    6     | EXPR . '-' EXPR
+    6     | EXPR '-' EXPR .
+    7     | EXPR . '*' EXPR
+    8     | EXPR . '/' EXPR
+   15     | EXPR . INC
+   16     | EXPR . DEC
+
+    INC  shift, and go to state 14
+    DEC  shift, and go to state 15
+    '+'  shift, and go to state 17
+    '-'  shift, and go to state 18
+    '*'  shift, and go to state 19
+    '/'  shift, and go to state 20
+
+    INC       [reduce using rule 6 (EXPR)]
+    DEC       [reduce using rule 6 (EXPR)]
+    '+'       [reduce using rule 6 (EXPR)]
+    '-'       [reduce using rule 6 (EXPR)]
+    '*'       [reduce using rule 6 (EXPR)]
+    '/'       [reduce using rule 6 (EXPR)]
+    $default  reduce using rule 6 (EXPR)
+
+
+state 24
+
+    5 EXPR: EXPR . '+' EXPR
+    6     | EXPR . '-' EXPR
+    7     | EXPR . '*' EXPR
+    7     | EXPR '*' EXPR .
+    8     | EXPR . '/' EXPR
+   15     | EXPR . INC
+   16     | EXPR . DEC
+
+    INC  shift, and go to state 14
+    DEC  shift, and go to state 15
+    '+'  shift, and go to state 17
+    '-'  shift, and go to state 18
+    '*'  shift, and go to state 19
+    '/'  shift, and go to state 20
+
+    INC       [reduce using rule 7 (EXPR)]
+    DEC       [reduce using rule 7 (EXPR)]
+    '+'       [reduce using rule 7 (EXPR)]
+    '-'       [reduce using rule 7 (EXPR)]
+    '*'       [reduce using rule 7 (EXPR)]
+    '/'       [reduce using rule 7 (EXPR)]
+    $default  reduce using rule 7 (EXPR)
+
+
+state 25
+
+    5 EXPR: EXPR . '+' EXPR
+    6     | EXPR . '-' EXPR
+    7     | EXPR . '*' EXPR
+    8     | EXPR . '/' EXPR
+    8     | EXPR '/' EXPR .
+   15     | EXPR . INC
+   16     | EXPR . DEC
+
+    INC  shift, and go to state 14
+    DEC  shift, and go to state 15
+    '+'  shift, and go to state 17
+    '-'  shift, and go to state 18
+    '*'  shift, and go to state 19
+    '/'  shift, and go to state 20
+
+    INC       [reduce using rule 8 (EXPR)]
+    DEC       [reduce using rule 8 (EXPR)]
+    '+'       [reduce using rule 8 (EXPR)]
+    '-'       [reduce using rule 8 (EXPR)]
+    '*'       [reduce using rule 8 (EXPR)]
+    '/'       [reduce using rule 8 (EXPR)]
+    $default  reduce using rule 8 (EXPR)
