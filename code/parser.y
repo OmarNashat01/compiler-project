@@ -76,7 +76,7 @@ STMT_LIST: '{' STMT_LIST '}' STMT_LIST_EPS
   
 STMT_LIST_EPS: STMT_LIST | 
 
-// STMT: error { yyerrok;}
+STMT_LIST: error ';'    { fprintf(stderr, "Syntax error in line: %d\n", yylineno); }
 
 // - [ ] Variables and Constants declaration.
 STMT: DATA_TYPE VARIABLE
@@ -86,20 +86,22 @@ STMT: DATA_TYPE VARIABLE
 
 // - [ ] Assign stataments.
 STMT: VARIABLE ASSIGN_OP EXPR
-    | VARIABLE INC
-    | VARIABLE DEC
-
 
 // - [ ] Mathematical and logical expressions.
 STMT: EXPR
-EXPR: EXPR MATH_OP EXPR
-    | EXPR BITWISE_OP EXPR
-    | BOOL_EXPR
-    | '(' EXPR ')'
-    | VARIABLE
-    | VARIABLE INC
-    | VARIABLE DEC
-    | DATA_LITERALS
+
+EXPR: VARIABLE INC                            { fprintf(stdout, "INC++\n"); }
+    | VARIABLE DEC                            { fprintf(stdout, "DEC--\n"); }
+
+    | EXPR MATH_OP EXPR                       { fprintf(stdout, "EXPR (OP) EXPR \n"); }
+    | EXPR BITWISE_OP EXPR                    { fprintf(stdout, "EXPR (BITWISE OP) EXPR\n"); }
+    | BOOL_EXPR                               { fprintf(stdout, "BOOL_EXPR\n"); }
+    | '(' EXPR ')'                            { fprintf(stdout, "(EXPR)\n"); }
+    | VARIABLE                                { fprintf(stdout, "VARIABLE\n"); }
+    | DATA_LITERALS                           { fprintf(stdout, "DATA_LITERALS\n"); }
+
+    | INC VARIABLE                            { fprintf(stdout, "++INC\n"); }
+    | DEC VARIABLE                            { fprintf(stdout, "--DEC\n"); }
 
 BOOL_EXPR: BOOL_LITERAL
     | '(' BOOL_EXPR ')'

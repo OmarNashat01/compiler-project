@@ -24,6 +24,8 @@
 "static"                        { return STATIC;    }
 "class"                         { return CLASS;     }
 
+"true"                          { return BOOL_LITERAL; }
+"false"                         { return BOOL_LITERAL; }
 
     /* Types */
 "char"	                        { return CHAR;      }
@@ -79,14 +81,12 @@
 [;\.,\?:]                       { return yytext[0]; }
 
     /* Variable */
-[a-zA-z][\w]*                   { return VARIABLE;} 
+[a-zA-z][_a-zA-Z0-9]*                   { return VARIABLE;} 
 
 
     /* literals */
 0|([1-9][0-9]*)                 { return INT_LITERAL; }
 [0-9]+\.[0-9]+                  { return FLOAT_LITERAL; }
-"true"                          { return BOOL_LITERAL; }
-"false"                         { return BOOL_LITERAL; }
 
     /* [0-9]+[eE][+-]?[0-9]+           { return EXPONENT_LITERAL; } */
 
