@@ -68,11 +68,15 @@
 %%
 
 PROGRAM: STMT_LIST
-
-STMT_LIST: STMT ';'
+// - [ ] Block structure.
+STMT_LIST: '{' STMT_LIST '}' STMT_LIST_EPS
+    | STMT_LIST '{' STMT_LIST '}'
+    | STMT ';'
     | STMT_LIST STMT ';'
+  
+STMT_LIST_EPS: STMT_LIST | 
 
-//STMT: error { yyerrok;}
+// STMT: error { yyerrok;}
 
 // - [ ] Variables and Constants declaration.
 STMT: DATA_TYPE VARIABLE
@@ -115,6 +119,11 @@ CASES: CASE_STMT
 CASE_STMT: DEFAULT ':' '{' STMT_LIST '}'
     | CASE DATA_LITERALS ':' '{' STMT_LIST '}'
 
+// - [ ] Functions.
+STMT: DATA_TYPE VARIABLE '(' PARAMS ')' '{' STMT_LIST RETURN EXPR ';' '}' STMT_LIST_EPS
+
+PARAMS: DATA_TYPE VARIABLE
+    | PARAMS ',' DATA_TYPE VARIABLE | 
 
 MATH_OP: PLUS
     | MINUS
