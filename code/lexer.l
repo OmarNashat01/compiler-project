@@ -47,13 +47,12 @@
 "||"                            { return OR;        }
 
     /* Bitwise Operators */
-    /* "&"                             { return AND; }
-"|"                             { return OR; }
-"^"                             { return XOR; }
-"~"                             { return NOT; }
+"&"                             { return AND_BITWISE; }
+"|"                             { return OR_BITWISE; }
+"^"                             { return XOR_BITWISE; }
+"~"                             { return NOT_BITWISE; }
 ">>"                            { return RIGHT_SHIFT; }
 "<<"                            { return LEFT_SHIFT; }
-    */
 
     /* unary operators */
 "++"                            { return INC;       }
@@ -80,12 +79,14 @@
 [;\.,\?:]                       { return yytext[0]; }
 
     /* Variable */
-[a-zA-z][\w+]                   { return VARIABLE;} 
+[a-zA-z][\w]*                   { return VARIABLE;} 
 
 
     /* literals */
 0|([1-9][0-9]*)                 { return INT_LITERAL; }
 [0-9]+\.[0-9]+                  { return FLOAT_LITERAL; }
+"true"                          { return BOOL_LITERAL; }
+"false"                         { return BOOL_LITERAL; }
 
     /* [0-9]+[eE][+-]?[0-9]+           { return EXPONENT_LITERAL; } */
 
