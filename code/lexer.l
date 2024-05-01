@@ -1,6 +1,8 @@
 %{
     #include "parser.h"
-    #include <string.h>
+    #include <stdlib.h>
+    #include <stdio.h>
+    #include<string.h>
     int yyerror(const char *s);
     extern int yylineno;
 %}
@@ -24,8 +26,8 @@
 "static"                        { return STATIC;    }
 "class"                         { return CLASS;     }
 
-"true"                          { return BOOL_LITERAL; }
-"false"                         { return BOOL_LITERAL; }
+"true"                          { yylval.bval = 1; return BOOL_LITERAL; }
+"false"                         { yylval.bval = 0; return BOOL_LITERAL; }
 
     /* Types */
 "char"	                        { return CHAR;      }
@@ -39,39 +41,41 @@
 "!"                             { return NOT;       }
 
     /* binary comparators */
-">"                             { return GT;        }
-"<"                             { return LT;        }
-">="                            { return GE;        } 
-"<="                            { return LE;        }
-"=="                            { return EQ;        }
-"!="                            { return NE;        }
-"&&"                            { return AND;       }
-"||"                            { return OR;        }
+">"                             { yylval.opnum = 1; return LOGICAL_OP; }
+"<"                             { yylval.opnum = 1; return LOGICAL_OP; }
+">="                            { yylval.opnum = 1; return LOGICAL_OP; } 
+"<="                            { yylval.opnum = 1; return LOGICAL_OP; }
+"=="                            { yylval.opnum = 1; return LOGICAL_OP; }
+"!="                            { yylval.opnum = 1; return LOGICAL_OP; }
+"&&"                            { yylval.opnum = 1; return LOGICAL_OP; }
+"||"                            { yylval.opnum = 1; return LOGICAL_OP; }
 
     /* Bitwise Operators */
-"&"                             { return AND_BITWISE; }
-"|"                             { return OR_BITWISE; }
-"^"                             { return XOR_BITWISE; }
-"~"                             { return NOT_BITWISE; }
-">>"                            { return RIGHT_SHIFT; }
-"<<"                            { return LEFT_SHIFT; }
+"&"                             { yylval.opnum = 0; return BITWISE_OP; }
+"|"                             { yylval.opnum = 1; return BITWISE_OP; }
+"^"                             { yylval.opnum = 2; return BITWISE_OP; }
+"~"                             { yylval.opnum = 3; return BITWISE_OP; }
+">>"                            { yylval.opnum = 4; return BITWISE_OP; }
+"<<"                            { yylval.opnum = 5; return BITWISE_OP; }
 
     /* unary operators */
 "++"                            { return INC;       }
 "--"                            { return DEC;       }
 
     /* binary Operators */
-"+"                             { return PLUS; }
-"-"                             { return MINUS; }
-"*"                             { return MULT; }
-"/"                             { return DIV; }
-"%"                             { return MOD; }
-"="                             { return ASSIGN; }
-"+="                            { return PLUS_ASSIGN; }
-"-="                            { return MINUS_ASSIGN; }
-"*="                            { return MULT_ASSIGN; }
-"/="                            { return DIV_ASSIGN; }
-"%="                            { return MOD_ASSIGN; }
+"+"                             { yylval.opnum = 6; return MATH_OP; }
+"-"                             { yylval.opnum = 7; return MATH_OP; }
+"*"                             { yylval.opnum = 8; return MATH_OP; }
+"/"                             { yylval.opnum = 9; return MATH_OP; }
+"%"                             { yylval.opnum = 10; return MATH_OP; }
+
+    /* Assignment Operators */
+"="                             { yylval.opnum = 11; return ASSIGN; }
+"+="                            { yylval.opnum = 11; return ASSIGN_OP; }
+"-="                            { yylval.opnum = 11; return ASSIGN_OP; }
+"*="                            { yylval.opnum = 11; return ASSIGN_OP; }
+"/="                            { yylval.opnum = 11; return ASSIGN_OP; }
+"%="                            { yylval.opnum = 11; return ASSIGN_OP; }
 
 
     /* Brackets */
@@ -81,17 +85,17 @@
 [;\.,\?:]                       { return yytext[0]; }
 
     /* Variable */
-[a-zA-z][_a-zA-Z0-9]*                   { return VARIABLE;} 
+[a-zA-z][_a-zA-Z0-9]*           { yylval.id = strdup(yytext); return VARIABLE;} 
 
 
     /* literals */
-0|([1-9][0-9]*)                 { return INT_LITERAL; }
-[0-9]+\.[0-9]+                  { return FLOAT_LITERAL; }
+0|([1-9][0-9]*)                 { yylval.ival = atoi(yytext); return INT_LITERAL; }
+[0-9]+\.[0-9]+                  { yylval.fval = atof(yytext); return FLOAT_LITERAL; }
 
     /* [0-9]+[eE][+-]?[0-9]+           { return EXPONENT_LITERAL; } */
 
-\"[^\"]*\"                      { return STRING_LITERAL; }
-\'[^\']\'                       { return CHAR_LITERAL; }
+\"[^\"]*\"                      { yylval.sval = strdup(yytext); return STRING_LITERAL; }
+\'[^\']\'                       { yylval.cval = strdup(yytext); return CHAR_LITERAL; }
 
     /* Comments */
 "//".*                          {;}

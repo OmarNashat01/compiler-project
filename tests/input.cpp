@@ -1,6 +1,6 @@
 int x;
 int y = 0;
-const int width = 800;
+// const int width = 800;
 int test() {
     while (x == 0) {
         y = 0; 
