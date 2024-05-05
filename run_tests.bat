@@ -1,3 +1,4 @@
 @ECHO OFF
-type tests\input.cpp | call run.bat > tests\output.asm
+call build.bat
+type tests\input.cpp | call code\build\c_compiler.exe > tests\output.asm
 @ECHO ON

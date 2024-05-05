@@ -33,8 +33,6 @@
 "char"	                        { return CHAR;      }
 "int"	                        { return INT;       }
 "float"	                        { return FLOAT;     }
-"double"	                    { return DOUBLE;    }
-"long"                          { return LONG;      }
 "bool"                          { return BOOL;      }
 
     /* unary comparators */

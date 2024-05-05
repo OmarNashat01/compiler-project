@@ -1,6 +1,9 @@
 %{
     #include <stdio.h>
 	#include <string.h>	
+    #include "operation-table/operationTable.h"
+    #include "symbol-table/symbolTable.h"
+
 
     int yyerror(const char *s) {
         fprintf(stdout, "%s\n", s);
@@ -8,7 +11,20 @@
     }
     int yylex(void);
 	int yylineno = 1;
+    int scopeNum = 0;
+
+    // function variables
+    int argNum = 0;
+    int argTypes[20];
+
+    //
+
+    #define IS_CONST 1
+    #define IS_FUNC 1
+    #define IS_SET 1
+
 %}
+
 
 %union {
     int ival;
@@ -25,7 +41,7 @@
 %token IF ELSE FOR WHILE DO RETURN VOID BREAK CONTINUE SWITCH CASE DEFAULT CONST STATIC CLASS
  
 // types
-%token CHAR INT FLOAT DOUBLE LONG BOOL
+%token CHAR INT FLOAT BOOL
 
 // unary comparators
 %token NOT
@@ -62,6 +78,9 @@
 %token <cval> CHAR_LITERAL
 
 
+// Type of data
+%type <ival> DATA_TYPE
+
 // associativity rules
 %left INC DEC
 %left ASSIGN
@@ -74,28 +93,40 @@
 
 %start PROGRAM
 
+
 %%
 
-PROGRAM: STMT_LIST
+
+PROGRAM: STMT_LIST                                       { fprintf(stdout, "============END OF PROGRAM===========\n"); }
 // - [ ] Block structure.
 STMT_LIST: BLOCK STMT_LIST_EPS
     | STMT_LIST BLOCK
     | STMT
     | STMT_LIST STMT
   
-BLOCK: '{' STMT_LIST '}'
+BLOCK: OPENSCOPE STMT_LIST CLOSESCOPE
 
 STMT_LIST_EPS: STMT_LIST | 
 
 STMT_LIST: error ';'                                      { fprintf(stdout, "Syntax error in line: %d\n", yylineno); }
-    | error '}'                                           { fprintf(stdout, "Syntax error in line: %d\n", yylineno); }
+    | error CLOSESCOPE                                           { fprintf(stdout, "Syntax error in line: %d\n", yylineno); }
+
 
 STMT: NON_SCOPED_STMT ';'
     | SCOPED_STMT
 // - [ ] Variables and Constants declaration.
-NON_SCOPED_STMT: DATA_TYPE VARIABLE                       { fprintf(stdout, "Variable declaration\n"); }
-    | DATA_TYPE VARIABLE ASSIGN EXPR                      { fprintf(stdout, "Variable declaration with assignment\n"); }
-    | CONST DATA_TYPE VARIABLE ASSIGN EXPR                { fprintf(stdout, "Constant declaration with assignment\n"); }
+NON_SCOPED_STMT: DATA_TYPE VARIABLE                       { 
+                fprintf(stdout, "Variable declaration\n");
+                setSymbol($1, !IS_CONST, !IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
+            }
+    | DATA_TYPE VARIABLE ASSIGN EXPR                      { 
+                fprintf(stdout, "Variable declaration with assignment\n", $1);
+                setSymbol($1, !IS_CONST, !IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
+            }
+    | CONST DATA_TYPE VARIABLE ASSIGN EXPR                { 
+                fprintf(stdout, "Constant declaration with assignment\n");
+                setSymbol($2, IS_CONST, !IS_FUNC, !IS_SET, $3, scopeNum, yylineno);
+            }
     | BREAK
 
 // - [ ] Assign stataments.
@@ -128,7 +159,7 @@ SCOPED_STMT: IF '(' BOOL_EXPR ')' BLOCK                                 { fprint
     | WHILE '(' BOOL_EXPR ')' BLOCK                                     { fprintf(stdout, "WHILE statement\n"); }
     | DO BLOCK WHILE '(' BOOL_EXPR ')' ';'                              { fprintf(stdout, "DO-WHILE statement\n"); }
     | FOR '(' STMT ';' BOOL_EXPR ';' STMT ')' BLOCK                     { fprintf(stdout, "FOR loop statement\n"); }
-    | SWITCH '(' VARIABLE ')' '{' CASES '}'                             { fprintf(stdout, "SWITCH statement\n"); }
+    | SWITCH '(' VARIABLE ')' OPENSCOPE CASES CLOSESCOPE                             { fprintf(stdout, "SWITCH statement\n"); }
 
 CASES: CASE_STMT
     | CASE_STMT CASES
@@ -139,38 +170,28 @@ CASE_STMT: DEFAULT ':' BLOCK
 // - [ ] Functions.
 SCOPED_STMT: FUNCTION STMT_LIST_EPS 
 
-FUNCTION: DATA_TYPE VARIABLE '(' PARAMS ')' '{' STMT_LIST_EPS RETURN EXPR ';' '}'       { fprintf(stdout, "Function declaration\n"); }
+FUNCTION: DATA_TYPE VARIABLE '(' PARAMS ')' OPENSCOPE STMT_LIST_EPS RETURN EXPR ';' CLOSESCOPE       { 
+        fprintf(stdout, "Function declaration\n"); 
+        setSymbol($1, !IS_CONST, IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
+        setFunctionSymbol(argNum, argTypes);
+        argNum = 0;
+    }
 
-EXPR: VARIABLE '(' PASSED_PARAMS ')'                                                           { fprintf(stdout, "Function call\n"); }
+EXPR: VARIABLE '(' PASSED_PARAMS ')'        { fprintf(stdout, "Function call\n"); }
 
 PASSED_PARAMS: EXPR
     | PASSED_PARAMS ',' EXPR
 
-PARAMS: DATA_TYPE VARIABLE
-    | PARAMS ',' DATA_TYPE VARIABLE | 
+PARAMS: DATA_TYPE VARIABLE                  { 
+            argTypes[argNum++] = $1;
+            setSymbol($1, !IS_CONST, !IS_FUNC, IS_SET, $2, scopeNum + 1, yylineno);
+        }
+    | PARAMS ',' DATA_TYPE VARIABLE         { 
+            argTypes[argNum++] = $3;
+            setSymbol($3, !IS_CONST, !IS_FUNC, IS_SET, $4, scopeNum + 1, yylineno);
+        }
+    |
 
-// MATH_OP: PLUS
-//     | MINUS
-//     | MULT
-//     | DIV
-//     | MOD
-
-// BITWISE_OP: AND_BITWISE
-//     | OR_BITWISE
-//     | XOR_BITWISE
-//     | NOT_BITWISE
-//     | RIGHT_SHIFT
-//     | LEFT_SHIFT
-
-// LOGICAL_OP: AND
-//     | OR
-//     | NOT
-//     | GT
-//     | LT
-//     | GE
-//     | LE
-//     | EQ
-//     | NE
 
 
 DATA_LITERALS: INT_LITERAL                  { fprintf(stdout, "INT_LITERAL\n"); }
@@ -179,16 +200,22 @@ DATA_LITERALS: INT_LITERAL                  { fprintf(stdout, "INT_LITERAL\n"); 
     | CHAR_LITERAL                          { fprintf(stdout, "CHAR_LITERAL\n"); }
     | BOOL_LITERAL                          { fprintf(stdout, "BOOL_LITERAL\n"); }
 
-DATA_TYPE: INT
-    | FLOAT
-    | DOUBLE
-    | LONG
-    | BOOL
-    | CHAR
+DATA_TYPE: INT                              { $$ = 0;     }
+    | FLOAT                                 { $$ = 1;     }
+    | CHAR                                  { $$ = 2;     } 
+    | BOOL                                  { $$ = 3;     }
+
+OPENSCOPE: '{'                               { scopeNum++; }
+CLOSESCOPE: '}'                              { scopeNum--; }
 
 %%
 
 int main(int argc, char **argv) {
+    printf("============START OF PROGRAM===========\n");
+
     yyparse();
+
+    printSymbolTable(); 
+
     return 0;
 }

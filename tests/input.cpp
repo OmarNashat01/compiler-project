@@ -1,6 +1,6 @@
 int x;
 int y = 0;
-// const int width = 800;
+const int width = 800;
 int test() {
     while (x == 0) {
         y = 0; 
@@ -10,8 +10,9 @@ int test() {
     } 
     return x >= y;
 }
-char func(int a, int b, bool x, float y) {
+char func(char a, int b, bool x, float y) {
     int z = 0;
+    int z;
     if (x > 0) {
         z = a + b; 
     }
