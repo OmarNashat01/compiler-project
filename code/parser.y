@@ -17,7 +17,9 @@
     int argNum = 0;
     int argTypes[20];
 
-    //
+    // operation table
+    int tempCount = 0;
+    char *tempVars[16] = {"t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9", "t10", "t11", "t12", "t13", "t14", "t15", "t16"};
 
     #define IS_CONST 1
     #define IS_FUNC 1
@@ -80,6 +82,8 @@
 
 // Type of data
 %type <ival> DATA_TYPE
+%type <sval> EXPR BOOL_EXPR DATA_LITERALS
+
 
 // associativity rules
 %left INC DEC
@@ -116,17 +120,17 @@ STMT: NON_SCOPED_STMT ';'
     | SCOPED_STMT
 // - [ ] Variables and Constants declaration.
 NON_SCOPED_STMT: DATA_TYPE VARIABLE                       { 
-                fprintf(stdout, "Variable declaration\n");
-                setSymbol($1, !IS_CONST, !IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
-            }
+            fprintf(stdout, "Variable declaration\n");
+            setSymbol($1, !IS_CONST, !IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
+        }
     | DATA_TYPE VARIABLE ASSIGN EXPR                      { 
-                fprintf(stdout, "Variable declaration with assignment\n", $1);
-                setSymbol($1, !IS_CONST, !IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
-            }
+            fprintf(stdout, "Variable declaration with assignment\n", $1);
+            setSymbol($1, !IS_CONST, !IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
+        }
     | CONST DATA_TYPE VARIABLE ASSIGN EXPR                { 
-                fprintf(stdout, "Constant declaration with assignment\n");
-                setSymbol($2, IS_CONST, !IS_FUNC, !IS_SET, $3, scopeNum, yylineno);
-            }
+            fprintf(stdout, "Constant declaration with assignment\n");
+            setSymbol($2, IS_CONST, !IS_FUNC, !IS_SET, $3, scopeNum, yylineno);
+        }
     | BREAK
 
 // - [ ] Assign stataments.
@@ -136,22 +140,46 @@ NON_SCOPED_STMT: VARIABLE ASSIGN_OP EXPR                  { fprintf(stdout, "(%s
 // - [ ] Mathematical and logical expressions.
 NON_SCOPED_STMT: EXPR
 
-EXPR: VARIABLE INC                            { fprintf(stdout, "%s INC\n", $1); }
-    | VARIABLE DEC                            { fprintf(stdout, "Postfix DEC--\n"); }
+EXPR: VARIABLE INC                            { 
+            fprintf(stdout, "%s INC\n", $1);
+            setQuad(25, $1, NULL, tempVars[tempCount]);
+            $$ = tempVars[tempCount++];
+        }
+    | VARIABLE DEC                            {
+            fprintf(stdout, "%s DEC\n", $1);
+            setQuad(26, $1, NULL, tempVars[tempCount]);
+            $$ = tempVars[tempCount++];
+        }
 
-    | EXPR MATH_OP EXPR                       { fprintf(stdout, "EXPR (%d) EXPR \n", $2); }
-    | EXPR BITWISE_OP EXPR                    { fprintf(stdout, "EXPR (%d) EXPR\n", $2); }
-    | BOOL_EXPR                               { fprintf(stdout, "BOOL_EXPR \n"); }
-    | '(' EXPR ')'                            { fprintf(stdout, "(EXPR)\n"); }
-    | VARIABLE                                { fprintf(stdout, "VARIABLE\n"); }
-    | DATA_LITERALS                           { fprintf(stdout, "DATA_LITERALS\n"); }
+    | EXPR MATH_OP EXPR                       { 
+            fprintf(stdout, "EXPR (%d) EXPR \n", $2); 
+            setQuad($2, $1, $3, tempVars[tempCount]);
+            $$ = tempVars[tempCount++];
+        }
+    | EXPR BITWISE_OP EXPR                    { 
+            fprintf(stdout, "EXPR (%d) EXPR\n", $2);
+            setQuad($2, $1, $3, tempVars[tempCount]);
+            $$ = tempVars[tempCount++];
+        }
+    | BOOL_EXPR                               { fprintf(stdout, "BOOL_EXPR \n"); $$ = $1;}
+    | '(' EXPR ')'                            { fprintf(stdout, "(EXPR)\n"); $$ = $2;}
+    | VARIABLE                                { fprintf(stdout, "VARIABLE\n"); $$ = $1;}
+    | DATA_LITERALS                           { fprintf(stdout, "DATA_LITERALS\n"); $$ = $1;}
 
-    | INC VARIABLE                            { fprintf(stdout, "Prefix INC\n"); }
-    | DEC VARIABLE                            { fprintf(stdout, "Prefix DEC\n"); }
+    // | INC VARIABLE                            { fprintf(stdout, "Prefix INC\n"); }
+    // | DEC VARIABLE                            { fprintf(stdout, "Prefix DEC\n"); }
 
-BOOL_EXPR: BOOL_LITERAL                       { fprintf(stdout, "BOOL_LITERAL\n"); }
-    | '(' BOOL_EXPR ')'                       { fprintf(stdout, "(BOOL_EXPR)\n"); }
-    | EXPR LOGICAL_OP EXPR                    { fprintf(stdout, "EXPR (%d) EXPR\n", $2); }
+BOOL_EXPR: BOOL_LITERAL                       { 
+            fprintf(stdout, "BOOL_LITERAL\n");
+            setQuad(19, NULL, $1, tempVars[tempCount]);
+            $$ = tempVars[tempCount++];
+        }
+    | '(' BOOL_EXPR ')'                       { fprintf(stdout, "(BOOL_EXPR)\n"); $$ = $2; }
+    | EXPR LOGICAL_OP EXPR                    { 
+            fprintf(stdout, "EXPR (%d) EXPR\n", $2);
+            setQuad($2, $1, $3, tempVars[tempCount]);
+            $$ = tempVars[tempCount++];
+        }
 
 //- [ ] If-then-else statement, while loops, repeat-until loops, for loops, switch statement.
 SCOPED_STMT: IF '(' BOOL_EXPR ')' BLOCK                                 { fprintf(stdout, "IF statement\n"); }
@@ -194,11 +222,11 @@ PARAMS: DATA_TYPE VARIABLE                  {
 
 
 
-DATA_LITERALS: INT_LITERAL                  { fprintf(stdout, "INT_LITERAL\n"); }
-    | FLOAT_LITERAL                         { fprintf(stdout, "FLOAT_LITERAL\n"); }
-    | STRING_LITERAL                        { fprintf(stdout, "STRING_LITERAL\n"); }
-    | CHAR_LITERAL                          { fprintf(stdout, "CHAR_LITERAL\n"); }
-    | BOOL_LITERAL                          { fprintf(stdout, "BOOL_LITERAL\n"); }
+DATA_LITERALS: INT_LITERAL                  { fprintf(stdout, "INT_LITERAL\n"); $$ = $1; }
+    | FLOAT_LITERAL                         { fprintf(stdout, "FLOAT_LITERAL\n"); $$ = $1;}
+    | STRING_LITERAL                        { fprintf(stdout, "STRING_LITERAL\n"); $$ = $1;}
+    | CHAR_LITERAL                          { fprintf(stdout, "CHAR_LITERAL\n"); $$ = $1;}
+    | BOOL_LITERAL                          { fprintf(stdout, "BOOL_LITERAL\n"); $$ = $1;}
 
 DATA_TYPE: INT                              { $$ = 0;     }
     | FLOAT                                 { $$ = 1;     }

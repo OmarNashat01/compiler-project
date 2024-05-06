@@ -39,41 +39,41 @@
 "!"                             { return NOT;       }
 
     /* binary comparators */
-">"                             { yylval.opnum = 1; return LOGICAL_OP; }
-"<"                             { yylval.opnum = 1; return LOGICAL_OP; }
-">="                            { yylval.opnum = 1; return LOGICAL_OP; } 
-"<="                            { yylval.opnum = 1; return LOGICAL_OP; }
-"=="                            { yylval.opnum = 1; return LOGICAL_OP; }
-"!="                            { yylval.opnum = 1; return LOGICAL_OP; }
-"&&"                            { yylval.opnum = 1; return LOGICAL_OP; }
-"||"                            { yylval.opnum = 1; return LOGICAL_OP; }
+">"                             { yylval.opnum= 0; return LOGICAL_OP; }
+"<"                             { yylval.opnum= 1; return LOGICAL_OP; }
+">="                            { yylval.opnum= 2; return LOGICAL_OP; } 
+"<="                            { yylval.opnum= 3; return LOGICAL_OP; }
+"=="                            { yylval.opnum= 4; return LOGICAL_OP; }
+"!="                            { yylval.opnum= 5; return LOGICAL_OP; }
+"&&"                            { yylval.opnum= 6; return LOGICAL_OP; }
+"||"                            { yylval.opnum= 7; return LOGICAL_OP; }
 
     /* Bitwise Operators */
-"&"                             { yylval.opnum = 0; return BITWISE_OP; }
-"|"                             { yylval.opnum = 1; return BITWISE_OP; }
-"^"                             { yylval.opnum = 2; return BITWISE_OP; }
-"~"                             { yylval.opnum = 3; return BITWISE_OP; }
-">>"                            { yylval.opnum = 4; return BITWISE_OP; }
-"<<"                            { yylval.opnum = 5; return BITWISE_OP; }
+"&"                             { yylval.opnum= 8; return BITWISE_OP; }
+"|"                             { yylval.opnum= 9; return BITWISE_OP; }
+"^"                             { yylval.opnum= 10; return BITWISE_OP; }
+"~"                             { yylval.opnum= 11; return BITWISE_OP; }
+">>"                            { yylval.opnum= 12; return BITWISE_OP; }
+"<<"                            { yylval.opnum= 13; return BITWISE_OP; }
 
     /* unary operators */
-"++"                            { return INC;       }
-"--"                            { return DEC;       }
+"++"                            { return INC;//op = 25}
+"--"                            { return DEC;//op = 26}
 
     /* binary Operators */
-"+"                             { yylval.opnum = 6; return MATH_OP; }
-"-"                             { yylval.opnum = 7; return MATH_OP; }
-"*"                             { yylval.opnum = 8; return MATH_OP; }
-"/"                             { yylval.opnum = 9; return MATH_OP; }
-"%"                             { yylval.opnum = 10; return MATH_OP; }
+"+"                             { yylval.opnum= 14; return MATH_OP; }
+"-"                             { yylval.opnum= 15; return MATH_OP; }
+"*"                             { yylval.opnum= 16; return MATH_OP; }
+"/"                             { yylval.opnum= 17; return MATH_OP; }
+"%"                             { yylval.opnum= 18; return MATH_OP; }
 
     /* Assignment Operators */
-"="                             { yylval.opnum = 11; return ASSIGN; }
-"+="                            { yylval.opnum = 11; return ASSIGN_OP; }
-"-="                            { yylval.opnum = 11; return ASSIGN_OP; }
-"*="                            { yylval.opnum = 11; return ASSIGN_OP; }
-"/="                            { yylval.opnum = 11; return ASSIGN_OP; }
-"%="                            { yylval.opnum = 11; return ASSIGN_OP; }
+"="                             { yylval.opnum= 19; return ASSIGN; }
+"+="                            { yylval.opnum= 20; return ASSIGN_OP; }
+"-="                            { yylval.opnum= 21; return ASSIGN_OP; }
+"*="                            { yylval.opnum= 22; return ASSIGN_OP; }
+"/="                            { yylval.opnum= 23; return ASSIGN_OP; }
+"%="                            { yylval.opnum= 24; return ASSIGN_OP; }
 
 
     /* Brackets */
