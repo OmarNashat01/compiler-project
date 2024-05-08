@@ -125,11 +125,11 @@ NON_SCOPED_STMT: DATA_TYPE VARIABLE                       {
         }
     | DATA_TYPE VARIABLE ASSIGN EXPR                      { 
             fprintf(stdout, "Variable declaration with assignment\n", $1);
-            setSymbol($1, !IS_CONST, !IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
+            setSymbol($1, !IS_CONST, !IS_FUNC, IS_SET, $2, scopeNum, yylineno);
         }
     | CONST DATA_TYPE VARIABLE ASSIGN EXPR                { 
             fprintf(stdout, "Constant declaration with assignment\n");
-            setSymbol($2, IS_CONST, !IS_FUNC, !IS_SET, $3, scopeNum, yylineno);
+            setSymbol($2, IS_CONST, !IS_FUNC, IS_SET, $3, scopeNum, yylineno);
         }
     | BREAK
 
@@ -222,6 +222,7 @@ PARAMS: DATA_TYPE VARIABLE                  {
 
 
 
+<<<<<<< HEAD
 DATA_LITERALS: INT_LITERAL                  {
             fprintf(stdout, "INT_LITERAL\n");
             setLiteralQuad(0, &$1, tempVars[tempCount]);
@@ -242,6 +243,13 @@ DATA_LITERALS: INT_LITERAL                  {
             setLiteralQuad(3, &$1, tempVars[tempCount]);
             $$ = tempVars[tempCount++];
         }
+=======
+DATA_LITERALS: INT_LITERAL                  { fprintf(stdout, "INT_LITERAL\n"); $$ = $1; }
+    | FLOAT_LITERAL                         { fprintf(stdout, "FLOAT_LITERAL\n"); $$ = $1;}
+    | STRING_LITERAL                        { fprintf(stdout, "STRING_LITERAL\n"); $$ = $1;}
+    | CHAR_LITERAL                          { fprintf(stdout, "CHAR_LITERAL\n"); $$ = $1;}
+    | BOOL_LITERAL                          { fsssprintf(stdout, "BOOL_LITERAL\n"); $$ = $1;}
+>>>>>>> dfd78234eb2cea8a0cc651b130ab997aa910a482
 
 DATA_TYPE: INT                              { $$ = 0;     }
     | FLOAT                                 { $$ = 1;     }
