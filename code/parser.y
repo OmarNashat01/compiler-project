@@ -222,11 +222,26 @@ PARAMS: DATA_TYPE VARIABLE                  {
 
 
 
-DATA_LITERALS: INT_LITERAL                  { fprintf(stdout, "INT_LITERAL\n"); $$ = $1; }
-    | FLOAT_LITERAL                         { fprintf(stdout, "FLOAT_LITERAL\n"); $$ = $1;}
-    | STRING_LITERAL                        { fprintf(stdout, "STRING_LITERAL\n"); $$ = $1;}
-    | CHAR_LITERAL                          { fprintf(stdout, "CHAR_LITERAL\n"); $$ = $1;}
-    | BOOL_LITERAL                          { fprintf(stdout, "BOOL_LITERAL\n"); $$ = $1;}
+DATA_LITERALS: INT_LITERAL                  {
+            fprintf(stdout, "INT_LITERAL\n");
+            setLiteralQuad(0, &$1, tempVars[tempCount]);
+            $$ = tempVars[tempCount++];
+        }
+    | FLOAT_LITERAL                         {
+            fprintf(stdout, "FLOAT_LITERAL\n");
+            setLiteralQuad(1, &$1, tempVars[tempCount]);
+            $$ = tempVars[tempCount++];
+        }
+    | CHAR_LITERAL                          {
+            fprintf(stdout, "CHAR_LITERAL\n");
+            setLiteralQuad(2, &$1, tempVars[tempCount]);
+            $$ = tempVars[tempCount++];
+        }
+    | BOOL_LITERAL                          {
+            fprintf(stdout, "BOOL_LITERAL\n");
+            setLiteralQuad(3, &$1, tempVars[tempCount]);
+            $$ = tempVars[tempCount++];
+        }
 
 DATA_TYPE: INT                              { $$ = 0;     }
     | FLOAT                                 { $$ = 1;     }

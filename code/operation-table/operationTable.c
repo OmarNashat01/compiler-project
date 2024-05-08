@@ -15,9 +15,22 @@ void setQuad(int op, char* arg1, char* arg2, char* res)
 	data->arg1 = arg1;
 	data->arg2 = arg2;
 	data->res = res;
+    data->type = -1;
 	pushQuad(data); 
 	return ;
 }
+
+void setLiteralQuad(int type, void *arg1, char *res)
+{
+	struct quadEntry *data = (struct quadEntry*) malloc(sizeof(struct quadEntry));
+	data->op = 29;
+	data->arg1 = arg1;
+	data->res = res;
+    data->type = type;
+	pushQuad(data); 
+    return;
+}
+
 
 void pushQuad(quadEntry *data)
 {

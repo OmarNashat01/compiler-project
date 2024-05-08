@@ -23,6 +23,7 @@ typedef struct quadNode
 
 
 void setQuad(int op, char *arg1, char *arg2, char *res);
+void setLiteralQuad(int type, void *arg1, char *res);
 void pushQuad(quadEntry *data);
 void printQuadTable();
 
