@@ -57,8 +57,8 @@
 "<<"                            { yylval.opnum= 13; return BITWISE_OP; }
 
     /* unary operators */
-"++"                            { return INC;//op = 25}
-"--"                            { return DEC;//op = 26}
+"++"                            { return INC; } /*op = 25*/
+"--"                            { return DEC; } /*op = 26*/
 
     /* binary Operators */
 "+"                             { yylval.opnum= 14; return MATH_OP; }
@@ -87,13 +87,13 @@
 
 
     /* literals */
-0|([1-9][0-9]*)                 { yylval.ival = atoi(yytext); return INT_LITERAL; }
-[0-9]+\.[0-9]+                  { yylval.fval = atof(yytext); return FLOAT_LITERAL; }
+0|([1-9][0-9]*)                 { yylval.sval = strdup(yytext); return INT_LITERAL; }
+[0-9]+\.[0-9]+                  { yylval.sval = strdup(yytext); return FLOAT_LITERAL; }
 
     /* [0-9]+[eE][+-]?[0-9]+           { return EXPONENT_LITERAL; } */
 
-\"[^\"]*\"                      { yylval.sval = strdup(yytext); return STRING_LITERAL; }
-\'[^\']\'                       { yylval.cval = strdup(yytext); return CHAR_LITERAL; }
+    /* \"[^\"]*\"                      { yylval.sval = strdup(yytext); return STRING_LITERAL; } */
+\'[^\']\'                       { yylval.sval = strdup(yytext); return CHAR_LITERAL; }
 
     /* Comments */
 "//".*                          {;}

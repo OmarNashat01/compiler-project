@@ -49,7 +49,7 @@ void setFunctionSymbol(int ArgNum, int *ArgTypes)
 {
     struct symbolEntry *data = ListTop->DATA;
 
-    int* ArgTypesCopy = (int*)malloc(ArgNum * sizeof(int));
+    int *ArgTypesCopy = (int *)malloc(ArgNum * sizeof(int));
     for (int i = 0; i < ArgNum; i++)
         ArgTypesCopy[i] = ArgTypes[i];
 

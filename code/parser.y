@@ -12,6 +12,8 @@
     int yylex(void);
 	int yylineno = 1;
     int scopeNum = 0;
+    int openScopeID = 0;
+    int closeScopeID = 0;
 
     // function variables
     int argNum = 0;
@@ -19,7 +21,11 @@
 
     // operation table
     int tempCount = 0;
-    char *tempVars[16] = {"t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9", "t10", "t11", "t12", "t13", "t14", "t15", "t16"};
+    char *tempVars[32] = {"t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9", "t10", "t11", "t12", "t13", "t14", "t15", "t16",
+        "t17", "t18", "t19", "t20", "t21", "t22", "t23", "t24", "t25", "t26", "t27", "t28", "t29", "t30", "t31", "t32"
+    };
+
+
 
     #define IS_CONST 1
     #define IS_FUNC 1
@@ -36,6 +42,12 @@
     char *sval;
     char *cval;
 	char *id ;                    	/* IDENTIFIER Value */
+    
+    struct block {
+        int open;
+        int close;
+    } block;
+
 }
 
 
@@ -73,17 +85,18 @@
 
 
 // literals
-%token <ival> INT_LITERAL
-%token <bval> BOOL_LITERAL
-%token <fval> FLOAT_LITERAL
-%token <sval> STRING_LITERAL
-%token <cval> CHAR_LITERAL
-
+/* %token <ival> INT_LITERAL */
+/* %token <bval> BOOL_LITERAL */
+/* %token <fval> FLOAT_LITERAL */
+%token <sval> CHAR_LITERAL
+%token <sval> INT_LITERAL BOOL_LITERAL FLOAT_LITERAL
 
 // Type of data
 %type <ival> DATA_TYPE
 %type <sval> EXPR BOOL_EXPR DATA_LITERALS
 
+%type <block> BLOCK
+%type <ival> OPENSCOPE CLOSESCOPE
 
 // associativity rules
 %left INC DEC
@@ -108,7 +121,7 @@ STMT_LIST: BLOCK STMT_LIST_EPS
     | STMT
     | STMT_LIST STMT
   
-BLOCK: OPENSCOPE STMT_LIST CLOSESCOPE
+BLOCK: OPENSCOPE STMT_LIST CLOSESCOPE { $$->open = $1; $$->close = $3; }
 
 STMT_LIST_EPS: STMT_LIST | 
 
@@ -124,21 +137,41 @@ NON_SCOPED_STMT: DATA_TYPE VARIABLE                       {
             setSymbol($1, !IS_CONST, !IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
         }
     | DATA_TYPE VARIABLE ASSIGN EXPR                      { 
-            fprintf(stdout, "Variable declaration with assignment\n", $1);
+            fprintf(stdout, "Variable declaration with assignment\nvar :%d:%s \nres: %s\n", $1,$2, $4);
             setSymbol($1, !IS_CONST, !IS_FUNC, IS_SET, $2, scopeNum, yylineno);
+            setQuad($3, $4, NULL, $2);
+            // value of all temp registers is reset
+            tempCount = 0;
         }
     | CONST DATA_TYPE VARIABLE ASSIGN EXPR                { 
             fprintf(stdout, "Constant declaration with assignment\n");
             setSymbol($2, IS_CONST, !IS_FUNC, IS_SET, $3, scopeNum, yylineno);
+            setQuad($4, $5, NULL, $2);
+            // value of all temp registers is reset
+            tempCount = 0;
         }
     | BREAK
 
 // - [ ] Assign stataments.
-NON_SCOPED_STMT: VARIABLE ASSIGN_OP EXPR                  { fprintf(stdout, "(%s) statement\n", $1); }
-    | VARIABLE ASSIGN EXPR                                { fprintf(stdout, "Assignment statement\n"); }
+NON_SCOPED_STMT: VARIABLE ASSIGN_OP EXPR                  { 
+            fprintf(stdout, "(%s) statement\n", $1);
+            setQuad($2, $3, NULL, $1);
+            // value of all temp registers is reset
+            tempCount = 0;
+        }
+    | VARIABLE ASSIGN EXPR                                { 
+            fprintf(stdout, "Assignment statement\n");
+            setQuad($2, $3, NULL, $1);    
+            // value of all temp registers is reset
+            tempCount = 0;
+        }
 
 // - [ ] Mathematical and logical expressions.
-NON_SCOPED_STMT: EXPR
+NON_SCOPED_STMT: EXPR                                     { 
+            fprintf(stdout, "Floating EXPR statement\n");
+            // value of all temp registers is reset
+            tempCount = 0;
+        }
 
 EXPR: VARIABLE INC                            { 
             fprintf(stdout, "%s INC\n", $1);
@@ -182,11 +215,34 @@ BOOL_EXPR: BOOL_LITERAL                       {
         }
 
 //- [ ] If-then-else statement, while loops, repeat-until loops, for loops, switch statement.
-SCOPED_STMT: IF '(' BOOL_EXPR ')' BLOCK                                 { fprintf(stdout, "IF statement\n"); }
-    | IF '(' BOOL_EXPR ')' BLOCK ELSE BLOCK                             { fprintf(stdout, "IF-ELSE statement\n"); }
-    | WHILE '(' BOOL_EXPR ')' BLOCK                                     { fprintf(stdout, "WHILE statement\n"); }
-    | DO BLOCK WHILE '(' BOOL_EXPR ')' ';'                              { fprintf(stdout, "DO-WHILE statement\n"); }
-    | FOR '(' STMT ';' BOOL_EXPR ';' STMT ')' BLOCK                     { fprintf(stdout, "FOR loop statement\n"); }
+SCOPED_STMT: IF '(' BOOL_EXPR ')' BLOCK                                 {
+            fprintf(stdout, "IF statement\n");
+            // value of all temp registers is reset
+            tempCount = 0;
+            
+        }
+    
+    | IF '(' BOOL_EXPR ')' BLOCK ELSE BLOCK                             {
+            fprintf(stdout, "IF-ELSE statement\n");
+            // value of all temp registers is reset
+            tempCount = 0;
+        }
+    | WHILE '(' BOOL_EXPR ')' BLOCK                                     {
+            fprintf(stdout, "WHILE statement\n"); 
+            // value of all temp registers is reset
+            tempCount = 0;
+        }
+        
+    | DO BLOCK WHILE '(' BOOL_EXPR ')' ';'                              {
+            fprintf(stdout, "DO-WHILE statement\n");
+            // value of all temp registers is reset
+            tempCount = 0;
+        }
+    | FOR '(' STMT ';' BOOL_EXPR ';' STMT ')' BLOCK                     {
+            fprintf(stdout, "FOR loop statement\n");
+            // value of all temp registers is reset
+            tempCount = 0;
+        }
     | SWITCH '(' VARIABLE ')' OPENSCOPE CASES CLOSESCOPE                             { fprintf(stdout, "SWITCH statement\n"); }
 
 CASES: CASE_STMT
@@ -222,42 +278,34 @@ PARAMS: DATA_TYPE VARIABLE                  {
 
 
 
-<<<<<<< HEAD
 DATA_LITERALS: INT_LITERAL                  {
             fprintf(stdout, "INT_LITERAL\n");
-            setLiteralQuad(0, &$1, tempVars[tempCount]);
+            setLiteralQuad(0, $1, tempVars[tempCount]);
             $$ = tempVars[tempCount++];
         }
     | FLOAT_LITERAL                         {
             fprintf(stdout, "FLOAT_LITERAL\n");
-            setLiteralQuad(1, &$1, tempVars[tempCount]);
+            setLiteralQuad(1, $1, tempVars[tempCount]);
             $$ = tempVars[tempCount++];
         }
     | CHAR_LITERAL                          {
             fprintf(stdout, "CHAR_LITERAL\n");
-            setLiteralQuad(2, &$1, tempVars[tempCount]);
+            setLiteralQuad(2, $1, tempVars[tempCount]);
             $$ = tempVars[tempCount++];
         }
     | BOOL_LITERAL                          {
             fprintf(stdout, "BOOL_LITERAL\n");
-            setLiteralQuad(3, &$1, tempVars[tempCount]);
+            setLiteralQuad(3, $1, tempVars[tempCount]);
             $$ = tempVars[tempCount++];
         }
-=======
-DATA_LITERALS: INT_LITERAL                  { fprintf(stdout, "INT_LITERAL\n"); $$ = $1; }
-    | FLOAT_LITERAL                         { fprintf(stdout, "FLOAT_LITERAL\n"); $$ = $1;}
-    | STRING_LITERAL                        { fprintf(stdout, "STRING_LITERAL\n"); $$ = $1;}
-    | CHAR_LITERAL                          { fprintf(stdout, "CHAR_LITERAL\n"); $$ = $1;}
-    | BOOL_LITERAL                          { fsssprintf(stdout, "BOOL_LITERAL\n"); $$ = $1;}
->>>>>>> dfd78234eb2cea8a0cc651b130ab997aa910a482
 
 DATA_TYPE: INT                              { $$ = 0;     }
     | FLOAT                                 { $$ = 1;     }
     | CHAR                                  { $$ = 2;     } 
     | BOOL                                  { $$ = 3;     }
 
-OPENSCOPE: '{'                               { scopeNum++; }
-CLOSESCOPE: '}'                              { scopeNum--; }
+OPENSCOPE: '{'                               { scopeNum++; $$ = openScopeID++; }
+CLOSESCOPE: '}'                              { scopeNum--; $$ = closeScopeID++; }
 
 %%
 
@@ -267,6 +315,6 @@ int main(int argc, char **argv) {
     yyparse();
 
     printSymbolTable(); 
-
+    printQuadTable();
     return 0;
 }
