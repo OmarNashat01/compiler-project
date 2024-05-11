@@ -5,49 +5,39 @@ int quadID = 0;          // ID of the quad
 // TODO: write todo message
 // TODO:
 char *operationType[] = {
-    "+",
-    "-",
-    "*",
-    "/",
     ">",
     "<",
     ">=",
     "<=",
     "==",
     "!=",
+    "&&",
+    "||",
+    "&",
+    "|",
+    "^",
+    "~",
+    ">>",
+    "<<",
     "+",
     "-",
     "*",
     "/",
-    ">",
-    "<",
-    ">=",
-    "<=",
-    "==",
-    "!=",
-    "+",
-    "-",
-    "*",
-    "/",
-    ">",
-    "<",
-    ">=",
-    "<=",
-    "==",
-    "!=",
-    "+",
-    "-",
-    "*",
-    "/",
-    ">",
-    "<",
-    ">=",
-    "<=",
-    "==",
-    "!=",
+    "%%",
+    "=",
+    "+=",
+    "-=",
+    "*=",
+    "/=",
+    "%%=",
+    "++",
+    "--",
+    "JMP",
+    "JMPF",
+    "SETLiteral",
 };
 
-void setQuad(int op, char *arg1, char *arg2, char *res)
+struct quadEntry *setQuad(int op, char *arg1, char *arg2, char *res)
 {
     // basically a constructor
     struct quadEntry *data = (struct quadEntry *)malloc(sizeof(struct quadEntry));
@@ -57,6 +47,13 @@ void setQuad(int op, char *arg1, char *arg2, char *res)
     data->res = res;
     data->type = -1;
     pushQuad(data);
+    return data;
+}
+
+void editJumpQuad(struct quadEntry *data, int jmpID)
+{
+    data->res = (char *)malloc(10);
+    sprintf(data->res, "LBL_%d", jmpID);
     return;
 }
 

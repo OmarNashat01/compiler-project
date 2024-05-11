@@ -12,8 +12,8 @@
     int yylex(void);
 	int yylineno = 1;
     int scopeNum = 0;
-    int openScopeID = 0;
-    int closeScopeID = 0;
+    // jmp labels
+    int labelID = 0;
 
     // function variables
     int argNum = 0;
@@ -42,13 +42,14 @@
     char *sval;
     char *cval;
 	char *id ;                    	/* IDENTIFIER Value */
-    
+    void *ptr;
     struct block {
         int open;
         int close;
     } block;
 
 }
+
 
 
 // keywords
@@ -97,6 +98,7 @@
 
 %type <block> BLOCK
 %type <ival> OPENSCOPE CLOSESCOPE
+%type <ptr> IF_COND ELSE_TOK
 
 // associativity rules
 %left INC DEC
@@ -121,7 +123,7 @@ STMT_LIST: BLOCK STMT_LIST_EPS
     | STMT
     | STMT_LIST STMT
   
-BLOCK: OPENSCOPE STMT_LIST CLOSESCOPE { $$->open = $1; $$->close = $3; }
+BLOCK: OPENSCOPE STMT_LIST CLOSESCOPE { $$.open = $1; $$.close = $3; }
 
 STMT_LIST_EPS: STMT_LIST | 
 
@@ -215,17 +217,19 @@ BOOL_EXPR: BOOL_LITERAL                       {
         }
 
 //- [ ] If-then-else statement, while loops, repeat-until loops, for loops, switch statement.
-SCOPED_STMT: IF '(' BOOL_EXPR ')' BLOCK                                 {
+SCOPED_STMT: IF_COND BLOCK                                 {
             fprintf(stdout, "IF statement\n");
             // value of all temp registers is reset
             tempCount = 0;
-            
+            editJumpQuad($1, $2.close);
         }
     
-    | IF '(' BOOL_EXPR ')' BLOCK ELSE BLOCK                             {
+    | IF_COND BLOCK ELSE_TOK BLOCK                             {
             fprintf(stdout, "IF-ELSE statement\n");
             // value of all temp registers is reset
             tempCount = 0;
+            editJumpQuad($1, $4.open);
+            editJumpQuad($3, $4.close);
         }
     | WHILE '(' BOOL_EXPR ')' BLOCK                                     {
             fprintf(stdout, "WHILE statement\n"); 
@@ -245,6 +249,20 @@ SCOPED_STMT: IF '(' BOOL_EXPR ')' BLOCK                                 {
         }
     | SWITCH '(' VARIABLE ')' OPENSCOPE CASES CLOSESCOPE                             { fprintf(stdout, "SWITCH statement\n"); }
 
+
+IF_COND: IF '(' BOOL_EXPR ')'                                           {
+            fprintf(stdout, "IF_COND\n");
+            // jump if false
+            $$ = setQuad(28, $3, NULL, NULL);
+        }
+
+ELSE_TOK: ELSE                                                          {
+            fprintf(stdout, "ELSE_TOK\n");
+            // jump to end of if-else block
+            // create string true
+            char trueStr[4] = "true";
+            $$ = setQuad(27, trueStr, NULL, NULL);
+        }
 CASES: CASE_STMT
     | CASE_STMT CASES
 
@@ -304,8 +322,8 @@ DATA_TYPE: INT                              { $$ = 0;     }
     | CHAR                                  { $$ = 2;     } 
     | BOOL                                  { $$ = 3;     }
 
-OPENSCOPE: '{'                               { scopeNum++; $$ = openScopeID++; }
-CLOSESCOPE: '}'                              { scopeNum--; $$ = closeScopeID++; }
+OPENSCOPE: '{'                               { fprintf(stdout, "Lbl_%d\n", labelID);scopeNum++; $$ = labelID++; }
+CLOSESCOPE: '}'                              { fprintf(stdout, "Lbl_%d\n", labelID);scopeNum--; $$ = labelID++; }
 
 %%
 
