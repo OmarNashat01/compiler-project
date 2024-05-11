@@ -33,3 +33,4 @@
 | 27 |    `JMP`    |Jump True |
 | 28 |    `JMPF`   |Jump False |
 | 29 |    `SETLiteral`   |Set Literal |
+| 30 |    `SETLabel`   |Set Label |

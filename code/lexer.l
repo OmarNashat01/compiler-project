@@ -26,8 +26,8 @@
 "static"                        { return STATIC;    }
 "class"                         { return CLASS;     }
 
-"true"                          { yylval.bval = 1; return BOOL_LITERAL; }
-"false"                         { yylval.bval = 0; return BOOL_LITERAL; }
+"true"                          { yylval.sval = strdup(yytext); return BOOL_LITERAL; }
+"false"                         { yylval.sval = strdup(yytext); return BOOL_LITERAL; }
 
     /* Types */
 "char"	                        { return CHAR;      }

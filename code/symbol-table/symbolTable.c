@@ -61,55 +61,81 @@ void setFunctionSymbol(int ArgNum, int *ArgTypes)
 void printSymbolTable()
 {
     // Print the symbol table
-    struct symbolNode *ptr = ListTop;
-    printf("Symbol Table\n");
+    FILE *fp = fopen("tests/symbolTable.txt", "w");
 
-    printf("%-10s|%-10s|%-10s|%-10s|%-10s|%-10s|%-10s|%-10s|%-10s|%-10s|%-10s\n",
-           "ID", "Type", "Const", "Used", "Set", "Function", "Scope", "Name", "Line", "ArgNum", "ArgTypes");
+    struct symbolNode *ptr = ListTop;
+    fprintf(fp, "Symbol Table\n");
+    fflush(fp);
+
+    fprintf(fp, "%-10s|%-10s|%-10s|%-10s|%-10s|%-10s|%-10s|%-10s|%-10s|%-10s|%-10s\n",
+            "ID", "Type", "Const", "Used", "Set", "Function", "Scope", "Name", "Line", "ArgNum", "ArgTypes");
+    fflush(fp);
     for (int i = 0; i < 10; i++)
     {
-        printf("==========|");
+        fprintf(fp, "==========|");
+        fflush(fp);
     }
-    printf("==========\n");
+    fprintf(fp, "==========\n");
+    fflush(fp);
     while (ptr)
     {
-        printf("%-10d|", ptr->ID);
-        printf("%-10s|", symbolEntryType[ptr->DATA->Type]);
-        printf("%-10s|", ptr->DATA->isConst ? "true" : "false");
-        printf("%-10s|", ptr->DATA->Used ? "true" : "false");
-        printf("%-10s|", ptr->DATA->isSet ? "true" : "false");
-        printf("%-10s|", ptr->DATA->IsFunctionSymbol ? "true" : "false");
-        printf("%-10d|", ptr->DATA->BracesScope);
-        printf("%-10s|", ptr->DATA->ID);
-        printf("%-10d|", ptr->DATA->LineNum);
+        fprintf(fp, "%-10d|", ptr->ID);
+        fflush(fp);
+        fprintf(fp, "%-10s|", symbolEntryType[ptr->DATA->Type]);
+        fflush(fp);
+        fprintf(fp, "%-10s|", ptr->DATA->isConst ? "true" : "false");
+        fflush(fp);
+        fprintf(fp, "%-10s|", ptr->DATA->Used ? "true" : "false");
+        fflush(fp);
+        fprintf(fp, "%-10s|", ptr->DATA->isSet ? "true" : "false");
+        fflush(fp);
+        fprintf(fp, "%-10s|", ptr->DATA->IsFunctionSymbol ? "true" : "false");
+        fflush(fp);
+        fprintf(fp, "%-10d|", ptr->DATA->BracesScope);
+        fflush(fp);
+        fprintf(fp, "%-10s|", ptr->DATA->ID);
+        fflush(fp);
+        fprintf(fp, "%-10d|", ptr->DATA->LineNum);
+        fflush(fp);
 
         if (ptr->DATA->IsFunctionSymbol)
         {
-            printf("%-10d|(", ptr->DATA->ArgNum);
+            fprintf(fp, "%-10d|(", ptr->DATA->ArgNum);
+            fflush(fp);
             // Print comma-separated ArgTypes with 2-space padding
 
             for (int i = 0; i < ptr->DATA->ArgNum; i++)
             {
-                printf("%-2s", symbolEntryType[ptr->DATA->ArgTypes[i]]);
+                fprintf(fp, "%-2s", symbolEntryType[ptr->DATA->ArgTypes[i]]);
+                fflush(fp);
                 if (i != ptr->DATA->ArgNum - 1)
                 {
-                    printf(", "); // Use "%-2s" to print ", " with padding
+                    fprintf(fp, ", "); // Use "%-2s" to print ", " with padding
+                    fflush(fp);
                 }
             }
-            printf(")");
+            fprintf(fp, ")");
+            fflush(fp);
         }
         else
         {
-            printf("%-10s|", "nil");
-            printf("%-10s", "nil");
+            fprintf(fp, "%-10s|", "nil");
+            fflush(fp);
+            fprintf(fp, "%-10s", "nil");
+            fflush(fp);
         }
-        printf("\n");
+        fprintf(fp, "\n");
+        fflush(fp);
         for (int i = 0; i < 10; i++)
         {
-            printf("----------|");
+            fprintf(fp, "----------|");
+            fflush(fp);
         }
-        printf("----------\n");
+        fprintf(fp, "----------\n");
+        fflush(fp);
         ptr = ptr->Next;
     }
-    printf("\n");
+    fprintf(fp, "End of Symbol Table\n");
+    fflush(fp);
+    fclose(fp);
 }

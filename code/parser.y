@@ -12,8 +12,6 @@
     int yylex(void);
 	int yylineno = 1;
     int scopeNum = 0;
-    // jmp labels
-    int labelID = 0;
 
     // function variables
     int argNum = 0;
@@ -24,6 +22,8 @@
     char *tempVars[32] = {"t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9", "t10", "t11", "t12", "t13", "t14", "t15", "t16",
         "t17", "t18", "t19", "t20", "t21", "t22", "t23", "t24", "t25", "t26", "t27", "t28", "t29", "t30", "t31", "t32"
     };
+
+    char *stringTrue = "true";
 
 
 
@@ -98,7 +98,7 @@
 
 %type <block> BLOCK
 %type <ival> OPENSCOPE CLOSESCOPE
-%type <ptr> IF_COND ELSE_TOK
+%type <ptr> IF_COND ELSE_TOK WHILE_COND
 
 // associativity rules
 %left INC DEC
@@ -206,7 +206,7 @@ EXPR: VARIABLE INC                            {
 
 BOOL_EXPR: BOOL_LITERAL                       { 
             fprintf(stdout, "BOOL_LITERAL\n");
-            setQuad(19, NULL, $1, tempVars[tempCount]);
+            setLiteralQuad(3, $1, tempVars[tempCount]);
             $$ = tempVars[tempCount++];
         }
     | '(' BOOL_EXPR ')'                       { fprintf(stdout, "(BOOL_EXPR)\n"); $$ = $2; }
@@ -231,16 +231,24 @@ SCOPED_STMT: IF_COND BLOCK                                 {
             editJumpQuad($1, $4.open);
             editJumpQuad($3, $4.close);
         }
-    | WHILE '(' BOOL_EXPR ')' BLOCK                                     {
+    | WHILE_COND BLOCK                                     {
             fprintf(stdout, "WHILE statement\n"); 
             // value of all temp registers is reset
             tempCount = 0;
+            // jump to start of while loop
+            struct entryQuad* q = setQuad(27, stringTrue, NULL, NULL);
+            editJumpQuad(q, $2.open);
+            // create new label and jump to it if false
+            editJumpQuad($1, createLabelQuad());
         }
         
     | DO BLOCK WHILE '(' BOOL_EXPR ')' ';'                              {
             fprintf(stdout, "DO-WHILE statement\n");
             // value of all temp registers is reset
             tempCount = 0;
+            // jump to start of do-while loop
+            struct entryQuad* q = setQuad(27, $5, NULL, NULL);
+            editJumpQuad(q, $2.open);
         }
     | FOR '(' STMT ';' BOOL_EXPR ';' STMT ')' BLOCK                     {
             fprintf(stdout, "FOR loop statement\n");
@@ -249,6 +257,11 @@ SCOPED_STMT: IF_COND BLOCK                                 {
         }
     | SWITCH '(' VARIABLE ')' OPENSCOPE CASES CLOSESCOPE                             { fprintf(stdout, "SWITCH statement\n"); }
 
+WHILE_COND : WHILE '(' BOOL_EXPR ')'                                    {
+            fprintf(stdout, "WHILE_COND\n");
+            // jump if false
+            $$ = setQuad(28, $3, NULL, NULL);
+}
 
 IF_COND: IF '(' BOOL_EXPR ')'                                           {
             fprintf(stdout, "IF_COND\n");
@@ -258,10 +271,8 @@ IF_COND: IF '(' BOOL_EXPR ')'                                           {
 
 ELSE_TOK: ELSE                                                          {
             fprintf(stdout, "ELSE_TOK\n");
-            // jump to end of if-else block
-            // create string true
-            char trueStr[4] = "true";
-            $$ = setQuad(27, trueStr, NULL, NULL);
+            // jump if true
+            $$ = setQuad(27, stringTrue, NULL, NULL);
         }
 CASES: CASE_STMT
     | CASE_STMT CASES
@@ -322,8 +333,8 @@ DATA_TYPE: INT                              { $$ = 0;     }
     | CHAR                                  { $$ = 2;     } 
     | BOOL                                  { $$ = 3;     }
 
-OPENSCOPE: '{'                               { fprintf(stdout, "Lbl_%d\n", labelID);scopeNum++; $$ = labelID++; }
-CLOSESCOPE: '}'                              { fprintf(stdout, "Lbl_%d\n", labelID);scopeNum--; $$ = labelID++; }
+OPENSCOPE: '{'                               { scopeNum++; $$ = createLabelQuad(); fprintf(stdout, "Lbl_%d\n", $$); }
+CLOSESCOPE: '}'                              { scopeNum--; $$ = createLabelQuad(); fprintf(stdout, "Lbl_%d\n", $$); }
 
 %%
 

@@ -2,6 +2,7 @@
 
 quadNode *TopPtr = NULL; // (head) top of the list
 int quadID = 0;          // ID of the quad
+int labelID = 0;         // ID of the label
 // TODO: write todo message
 // TODO:
 char *operationType[] = {
@@ -35,7 +36,7 @@ char *operationType[] = {
     "JMP",
     "JMPF",
     "SETLiteral",
-};
+    "SetLabel"};
 
 struct quadEntry *setQuad(int op, char *arg1, char *arg2, char *res)
 {
@@ -55,6 +56,14 @@ void editJumpQuad(struct quadEntry *data, int jmpID)
     data->res = (char *)malloc(10);
     sprintf(data->res, "LBL_%d", jmpID);
     return;
+}
+
+int createLabelQuad()
+{
+    char *label = (char *)malloc(10);
+    sprintf(label, "LBL_%d", labelID);
+    setQuad(30, NULL, NULL, label);
+    return labelID++;
 }
 
 void setLiteralQuad(int type, char *arg1, char *res)
@@ -102,25 +111,29 @@ void pushQuad(quadEntry *data)
 
 void printQuadTable()
 {
-    FILE *fp = fopen("quadTable.txt", "w");
+    FILE *fp = fopen("tests/quadTable.txt", "w");
     if (!fp)
     {
         fprintf(stderr, "Error: Unable to open file\n");
         return;
     }
     fprintf(fp, "Quad Table\n");
+    fflush(fp);
 
     // Print the symbol table
     struct quadNode *ptr = TopPtr;
 
     fprintf(fp, "%-10s|%-10s|%-10s|%-10s\n",
             "OP", "arg1", "arg2", "Result");
+    fflush(fp);
 
     for (int i = 0; i < 3; i++)
     {
         fprintf(fp, "==========|");
+        fflush(fp);
     }
     fprintf(fp, "==========\n");
+    fflush(fp);
     while (ptr)
     {
         fprintf(fp, "%-10s|%-10s|%-10s|%-10s",
@@ -128,13 +141,19 @@ void printQuadTable()
                 ptr->DATA->arg1 ? ptr->DATA->arg1 : "nil",
                 ptr->DATA->arg2 ? ptr->DATA->arg2 : "nil",
                 ptr->DATA->res ? ptr->DATA->res : "nil");
+        fflush(fp);
         fprintf(fp, "\n");
+        fflush(fp);
+
         for (int i = 0; i < 3; i++)
         {
             fprintf(fp, "----------|");
+            fflush(fp);
         }
         fprintf(fp, "----------\n");
+        fflush(fp);
         ptr = ptr->Next;
     }
+    fprintf(fp, "End of Quad Table\n");
     fclose(fp);
 }

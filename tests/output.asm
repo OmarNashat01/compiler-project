@@ -3,13 +3,18 @@ Variable declaration
 INT_LITERAL
 DATA_LITERALS
 Variable declaration with assignment
+var :0:y 
+res: t1
 INT_LITERAL
 DATA_LITERALS
 Constant declaration with assignment
+Lbl_0
 VARIABLE
 INT_LITERAL
 DATA_LITERALS
-EXPR (1) EXPR
+EXPR (4) EXPR
+WHILE_COND
+Lbl_1
 INT_LITERAL
 DATA_LITERALS
 Assignment statement
@@ -17,125 +22,128 @@ VARIABLE
 INT_LITERAL
 DATA_LITERALS
 EXPR (1) EXPR
+WHILE_COND
+Lbl_2
 VARIABLE
 INT_LITERAL
 DATA_LITERALS
-EXPR (6) EXPR 
+EXPR (14) EXPR 
 Assignment statement
+Lbl_3
 WHILE statement
 VARIABLE
 INT_LITERAL
 DATA_LITERALS
-EXPR (6) EXPR 
+EXPR (14) EXPR 
 Assignment statement
+Lbl_5
 WHILE statement
 VARIABLE
 VARIABLE
-EXPR (1) EXPR
+EXPR (2) EXPR
 BOOL_EXPR 
+Lbl_7
 Function declaration
+Lbl_8
 INT_LITERAL
 DATA_LITERALS
 Variable declaration with assignment
+var :0:z 
+res: t2
 Variable declaration
 Error: Variable z already declared in the current scope
 VARIABLE
 INT_LITERAL
 DATA_LITERALS
-EXPR (1) EXPR
+EXPR (0) EXPR
+IF_COND
+Lbl_9
 VARIABLE
 VARIABLE
-EXPR (6) EXPR 
+EXPR (14) EXPR 
 Assignment statement
+Lbl_10
+ELSE_TOK
+Lbl_11
 VARIABLE
 VARIABLE
-EXPR (7) EXPR 
+EXPR (15) EXPR 
 Assignment statement
+Lbl_12
 IF-ELSE statement
+Lbl_13
 VARIABLE
 INT_LITERAL
 DATA_LITERALS
-EXPR (6) EXPR 
+EXPR (14) EXPR 
 Assignment statement
+Lbl_14
 VARIABLE
 INT_LITERAL
 DATA_LITERALS
 EXPR (1) EXPR
 DO-WHILE statement
 VARIABLE
+Lbl_15
 Function declaration
+Lbl_16
+Lbl_17
 INT_LITERAL
-INT_LITERAL
-DATA_LITERALS
-Assignment statement
-INT_LITERAL
-INT_LITERAL
-DATA_LITERALS
-Assignment statement
+Lbl_18
 INT_LITERAL
 DATA_LITERALS
 Assignment statement
+Lbl_19
+INT_LITERAL
+Lbl_20
+INT_LITERAL
+DATA_LITERALS
+Assignment statement
+Lbl_21
+Lbl_22
+INT_LITERAL
+DATA_LITERALS
+Assignment statement
+Lbl_23
+Lbl_24
 SWITCH statement
 BOOL_LITERAL
 BOOL_EXPR 
+Lbl_25
 Function declaration
+Lbl_26
+Lbl_27
 INT_LITERAL
 DATA_LITERALS
 Variable declaration with assignment
+var :0:a 
+res: t2
 INT_LITERAL
 DATA_LITERALS
 Variable declaration with assignment
+var :0:b 
+res: t1
 BOOL_LITERAL
 BOOL_EXPR 
 Variable declaration with assignment
+var :3:x 
+res: t1
 FLOAT_LITERAL
 DATA_LITERALS
 Variable declaration with assignment
+var :1:y 
+res: t1
 VARIABLE
 VARIABLE
 VARIABLE
 VARIABLE
 Function call
 Variable declaration with assignment
+var :2:z 
+res: func
+Lbl_28
 INT_LITERAL
 DATA_LITERALS
+Lbl_29
 Function declaration
 ============END OF PROGRAM===========
-Symbol Table
-ID        |Type      |Const     |Used      |Set       |Function  |Scope     |Name      |Line      |ArgNum    |ArgTypes  
-==========|==========|==========|==========|==========|==========|==========|==========|==========|==========|==========
-16        |int       |false     |false     |false     |true      |0         |main      |54        |0         |()
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-15        |char      |false     |false     |false     |false     |2         |z         |51        |nil       |nil       
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-14        |float     |false     |false     |false     |false     |2         |y         |50        |nil       |nil       
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-13        |bool      |false     |false     |false     |false     |2         |x         |49        |nil       |nil       
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-12        |int       |false     |false     |false     |false     |2         |b         |48        |nil       |nil       
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-11        |int       |false     |false     |false     |false     |2         |a         |47        |nil       |nil       
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-10        |bool      |false     |false     |false     |true      |0         |test2     |43        |0         |()
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-9         |char      |false     |false     |false     |true      |0         |func      |27        |4         |(char, int, bool, float)
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-8         |int       |false     |false     |false     |false     |1         |z         |14        |nil       |nil       
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-7         |float     |false     |false     |true      |false     |1         |y         |13        |nil       |nil       
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-6         |bool      |false     |false     |true      |false     |1         |x         |13        |nil       |nil       
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-5         |int       |false     |false     |true      |false     |1         |b         |13        |nil       |nil       
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-4         |char      |false     |false     |true      |false     |1         |a         |13        |nil       |nil       
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-3         |int       |false     |false     |false     |true      |0         |test      |12        |0         |()
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-2         |int       |true      |false     |false     |false     |0         |width     |3         |nil       |nil       
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-1         |int       |false     |false     |false     |false     |0         |y         |2         |nil       |nil       
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-0         |int       |false     |false     |false     |false     |0         |x         |1         |nil       |nil       
-----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------
-
