@@ -65,6 +65,14 @@ int createLabelQuad()
     setQuad(30, NULL, NULL, label);
     return labelID++;
 }
+int createLabelQuad(char *name)
+{
+    // get length of the string
+    char *label = malloc(4 + strlen(name));
+    sprintf(label, "LBL_%s", name);
+    setQuad(30, NULL, NULL, label);
+    return labelID++;
+}
 
 void setLiteralQuad(int type, char *arg1, char *res)
 {

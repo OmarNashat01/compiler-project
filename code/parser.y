@@ -22,6 +22,7 @@
     char *tempVars[32] = {"t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9", "t10", "t11", "t12", "t13", "t14", "t15", "t16",
         "t17", "t18", "t19", "t20", "t21", "t22", "t23", "t24", "t25", "t26", "t27", "t28", "t29", "t30", "t31", "t32"
     };
+    int tempVarsType[32] = {0};
 
     char *stringTrue = "true";
 
@@ -47,6 +48,11 @@
         int open;
         int close;
     } block;
+
+    struct forLoop {
+        int beforeExpr, beforeUpdate;
+        void *jmpStart, *jmpEnd;
+    } forLoop;
 
 }
 
@@ -97,8 +103,9 @@
 %type <sval> EXPR BOOL_EXPR DATA_LITERALS
 
 %type <block> BLOCK
-%type <ival> OPENSCOPE CLOSESCOPE
-%type <ptr> IF_COND ELSE_TOK WHILE_COND
+%type <ival> OPENSCOPE CLOSESCOPE WHILE_TOK FOR_STMT
+%type <ptr> IF_COND ELSE_TOK WHILE_COND FUNCTION_START
+%type <forLoop> FOR_HEAD FOR_COND
 
 // associativity rules
 %left INC DEC
@@ -148,7 +155,7 @@ NON_SCOPED_STMT: DATA_TYPE VARIABLE                       {
     | CONST DATA_TYPE VARIABLE ASSIGN EXPR                { 
             fprintf(stdout, "Constant declaration with assignment\n");
             setSymbol($2, IS_CONST, !IS_FUNC, IS_SET, $3, scopeNum, yylineno);
-            setQuad($4, $5, NULL, $2);
+            setQuad($4, $5, NULL, $3);
             // value of all temp registers is reset
             tempCount = 0;
         }
@@ -231,15 +238,15 @@ SCOPED_STMT: IF_COND BLOCK                                 {
             editJumpQuad($1, $4.open);
             editJumpQuad($3, $4.close);
         }
-    | WHILE_COND BLOCK                                     {
+    | WHILE_TOK WHILE_COND BLOCK                                     {
             fprintf(stdout, "WHILE statement\n"); 
             // value of all temp registers is reset
             tempCount = 0;
             // jump to start of while loop
-            struct entryQuad* q = setQuad(27, stringTrue, NULL, NULL);
-            editJumpQuad(q, $2.open);
+            struct quadEntry* q = setQuad(27, stringTrue, NULL, NULL);
+            editJumpQuad(q, $1);
             // create new label and jump to it if false
-            editJumpQuad($1, createLabelQuad());
+            editJumpQuad($2, createLabelQuad());
         }
         
     | DO BLOCK WHILE '(' BOOL_EXPR ')' ';'                              {
@@ -247,21 +254,45 @@ SCOPED_STMT: IF_COND BLOCK                                 {
             // value of all temp registers is reset
             tempCount = 0;
             // jump to start of do-while loop
-            struct entryQuad* q = setQuad(27, $5, NULL, NULL);
+            struct quadEntry* q = setQuad(27, $5, NULL, NULL);
             editJumpQuad(q, $2.open);
         }
-    | FOR '(' STMT ';' BOOL_EXPR ';' STMT ')' BLOCK                     {
+    | FOR_HEAD BLOCK {
             fprintf(stdout, "FOR loop statement\n");
             // value of all temp registers is reset
+            scopeNum--;
             tempCount = 0;
-        }
-    | SWITCH '(' VARIABLE ')' OPENSCOPE CASES CLOSESCOPE                             { fprintf(stdout, "SWITCH statement\n"); }
+            // jump to start of for loop
+            struct quadEntry* q = setQuad(27, stringTrue, NULL, NULL);
+            editJumpQuad(q, $1.beforeUpdate);
 
-WHILE_COND : WHILE '(' BOOL_EXPR ')'                                    {
-            fprintf(stdout, "WHILE_COND\n");
-            // jump if false
-            $$ = setQuad(28, $3, NULL, NULL);
-}
+            // jump to  start scope to skip the update part
+            editJumpQuad($1.jmpStart, $2.open);
+
+            // jump to end if false
+            editJumpQuad($1.jmpEnd, createLabelQuad());
+        }
+    | SWITCH '(' VARIABLE ')' OPENSCOPE CASES CLOSESCOPE                            { fprintf(stdout, "SWITCH statement\n"); }
+
+FOR_HEAD :  FOR_STMT FOR_COND NON_SCOPED_STMT ')'                                            {
+            void* ptr = setQuad(27, stringTrue, NULL, NULL);
+            editJumpQuad(ptr, $$.beforeExpr);
+            $$.jmpEnd = $2.jmpEnd;
+            $$.jmpStart = $2.jmpStart;
+            $$.beforeExpr = $1;
+            $$.beforeUpdate = $2.beforeUpdate;
+         }
+
+FOR_STMT : FOR {scopeNum++;}'(' NON_SCOPED_STMT ';' {$$ = createLabelQuad();}
+FOR_COND : BOOL_EXPR ';'                                                            {
+            $$.jmpEnd = setQuad(28, $1, NULL, NULL);
+            $$.jmpStart = setQuad(27, stringTrue, NULL, NULL);
+            $$.beforeUpdate = createLabelQuad(); 
+        }
+
+WHILE_COND : '(' BOOL_EXPR ')'                                          { $$ = setQuad(28, $2, NULL, NULL); }
+
+WHILE_TOK: WHILE                                                        { $$ = createLabelQuad(); }
 
 IF_COND: IF '(' BOOL_EXPR ')'                                           {
             fprintf(stdout, "IF_COND\n");
@@ -283,12 +314,18 @@ CASE_STMT: DEFAULT ':' BLOCK
 // - [ ] Functions.
 SCOPED_STMT: FUNCTION STMT_LIST_EPS 
 
-FUNCTION: DATA_TYPE VARIABLE '(' PARAMS ')' OPENSCOPE STMT_LIST_EPS RETURN EXPR ';' CLOSESCOPE       { 
-        fprintf(stdout, "Function declaration\n"); 
-        setSymbol($1, !IS_CONST, IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
-        setFunctionSymbol(argNum, argTypes);
-        argNum = 0;
-    }
+FUNCTION: FUNCTION_START '(' PARAMS ')' OPENSCOPE STMT_LIST_EPS RETURN EXPR ';' CLOSESCOPE       { 
+            fprintf(stdout, "Function declaration\n"); 
+            setSymbol($1, !IS_CONST, IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
+            setFunctionSymbol(argNum, argTypes);
+            argNum = 0;
+        }
+    
+FUNCTION_START : DATA_TYPE VARIABLE         {
+            // jump if true
+            $$ = setQuad(27, stringTrue, NULL, NULL);
+            setLabelQuad($2);
+        }     
 
 EXPR: VARIABLE '(' PASSED_PARAMS ')'        { fprintf(stdout, "Function call\n"); }
 
