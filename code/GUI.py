@@ -5,6 +5,8 @@ from customtkinter import filedialog, CTkFrame, CTkTextbox, CTkButton, CTkToplev
 import pandas as pd
 from pandastable import Table, TableModel
 
+import subprocess
+
 
 class FileTableApp:
     def __init__(self, root):
@@ -16,7 +18,7 @@ class FileTableApp:
         self._create_textArea()
 
         self.file_button = CTkButton(
-            root, text="Compile", command=self.get_csv_data)
+            root, text="Compile", command=self.compile_and_show)
         self.file_button.pack(pady=10)
 
     def _create_toolbar(self):
@@ -70,14 +72,25 @@ class FileTableApp:
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
 
-    def get_csv_data(self):
-        file_path = filedialog.askopenfilename(
-            filetypes=[("CSV files", "*.csv"), ("Excel files", "*.xlsx")])
-        if file_path:
-            try:
-                self.display_table(file_path)
-            except Exception as e:
-                messagebox.showerror("Error", f"An error occurred: {e}")
+    def compile_and_show(self):
+        exe_path = "build\\c_compiler.exe"
+        # Create a PIPE for capturing standard output
+        process = subprocess.Popen(
+            [exe_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # Encode input for compatibility (adjust encoding if needed)
+        input_text = self.textArea.get("1.0", tk.END)
+        encoded_input = input_text.encode('utf-8')
+        # Send input to the EXE
+        process.stdin.write(encoded_input)
+        # Close standard input to prevent accidental mixing with output
+        process.stdin.close()
+        # Capture output and potential errors
+        output, error = process.communicate()
+        # Decode output for readability (adjust encoding if needed)
+        decoded_output = output.decode('utf-8')
+
+        print(decoded_output, error)
 
     def display_table(self, file_path):
         try:
