@@ -93,7 +93,7 @@ OperationTable::~OperationTable()
 
 int OperationTable::createLabelQuad(string scope)
 {
-    this->addQuad(28, "", "", "LBL:" + scope + ":" + to_string(this->labelCounter));
+    this->addQuad(30, "", "", "LBL:" + scope + ":" + to_string(this->labelCounter));
     return this->labelCounter++;
 }
 

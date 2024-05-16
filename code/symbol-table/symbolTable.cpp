@@ -106,6 +106,24 @@ SymbolTable::~SymbolTable()
     }
 }
 
+int SymbolTable::getVarType(string name)
+{
+    // Get the type of the variable
+    int searchingScope = this->scope;
+    for (auto ptr : this->table)
+    {
+        if (ptr->scope < searchingScope)
+            searchingScope = ptr->scope;
+
+        if (searchingScope != this->scope)
+            continue;
+
+        if (ptr->equalTo(name, this->scope))
+            return ptr->type;
+    }
+    return -1;
+}
+
 SymbolEntry *SymbolTable::addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int lineNum)
 {
     // check if symbol already exists
@@ -162,6 +180,11 @@ SymbolTables::~SymbolTables()
     {
         delete ptr.second;
     }
+}
+
+int SymbolTables::getVarType(string name)
+{
+    return this->tables[this->currentScope]->getVarType(name);
 }
 
 SymbolEntry *SymbolTables::addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int lineNum)

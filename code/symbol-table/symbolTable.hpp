@@ -19,17 +19,17 @@ public:
 	bool equalTo(string name, int scope);
 
 	int lineNum;
+	int scope;
+	int type;
 
 private:
 	static int SymbolID;
 
 	int ID;
-	int type;
 	bool isConst;
 	bool isUsed;
 	bool isSet;
 	bool isFunctionSymbol;
-	int scope;
 	string name;
 	vector<int> argTypes;
 };
@@ -40,6 +40,8 @@ public:
 	SymbolTable();
 	~SymbolTable();
 	SymbolEntry *addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int LineNum);
+
+	int getVarType(string name);
 
 	void addScope() { scope++; }
 	void removeScope() { scope--; }
@@ -58,6 +60,8 @@ public:
 	~SymbolTables();
 
 	SymbolEntry *addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int LineNum);
+
+	int getVarType(string name);
 
 	void addScope();
 	void removeScope();
