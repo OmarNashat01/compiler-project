@@ -62,7 +62,7 @@ public:
 	void addScope();
 	void removeScope();
 
-	void startFunction(string name) { currentScope = name; }
+	void startFunction(string name);
 	void endFunction() { currentScope = "global"; }
 
 	void printSymbolTables();

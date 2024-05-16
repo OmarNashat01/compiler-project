@@ -145,7 +145,6 @@ void SymbolTable::printSymbolTable(FILE *fp)
     }
     fprintf(fp, "End of Symbol Table\n");
     fflush(fp);
-    fclose(fp);
 }
 
 //////////////////////////////////// SYMBOL TABLES //////////////////////////////////////////////
@@ -182,6 +181,13 @@ void SymbolTables::removeScope()
     this->tables[this->currentScope]->removeScope();
 }
 
+void SymbolTables::startFunction(string name)
+{
+    // Start a new function
+    this->currentScope = name;
+    this->tables.insert(make_pair(this->currentScope, new SymbolTable()));
+}
+
 void SymbolTables::printSymbolTables()
 {
     // Print the symbol table
@@ -198,4 +204,5 @@ void SymbolTables::printSymbolTables()
         fflush(fp);
         ptr.second->printSymbolTable(fp);
     }
+    fclose(fp);
 }

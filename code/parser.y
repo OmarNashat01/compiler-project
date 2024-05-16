@@ -54,6 +54,7 @@
     struct functionHead{
         int type;
         char *name;
+        void* symbol;
     } functionHead;
 
     struct forLoop {
@@ -324,10 +325,9 @@ SCOPED_STMT: FUNCTION STMT_LIST_EPS
 
 FUNCTION: FUNCTION_START '(' PARAMS ')' OPENSCOPE STMT_LIST_EPS RETURN EXPR ';' CLOSESCOPE       { 
             fprintf(stdout, "Function declaration\n"); 
-            SymbolEntry* symb = symbolTables.addSymbol($1.type, !IS_CONST, IS_FUNC, !IS_SET, $1.name, scopeNum, yylineno);
             // addSymbol($1, !IS_CONST, IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
-            if (symb != NULL)
-                symb->setFunctionSymbol(argTypes);
+            if ($1.symbol != NULL)
+                reinterpret_cast<SymbolEntry*>($1.symbol)->setFunctionSymbol(argTypes);
             argTypes.clear();
             symbolTables.endFunction();
         }
@@ -336,7 +336,11 @@ FUNCTION_START : DATA_TYPE VARIABLE         {
             // jump if true
             $$.type = $1;
             $$.name = $2;
-            SymbolTables.startFunction($2);
+            $$.symbol = symbolTables.addSymbol($1, !IS_CONST, IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
+            if ($$.symbol != NULL)
+                symbolTables.startFunction($2);
+            else
+                symbolTables.startFunction("error");
         }     
 
 EXPR: VARIABLE '(' PASSED_PARAMS ')'        { fprintf(stdout, "Function call\n"); }
