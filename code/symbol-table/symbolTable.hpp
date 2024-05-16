@@ -1,14 +1,14 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-// #pragma warning(disable : 4996) // disables warning for deprecated functions
-
 #ifndef SYMBOL_TABLE_H
 #define SYMBOL_TABLE_H
 
+#include <string>
+#include <vector>
+#include <stdio.h>
+#include <stdlib.h>
+using namespace std;
+
 // Structure for the symbol table
-typedef struct symbolEntry
+struct
 {
 	int Type;
 	bool isConst;
@@ -16,21 +16,44 @@ typedef struct symbolEntry
 	bool isSet;
 	bool IsFunctionSymbol;
 	int BracesScope;
-	char *ID;
+	string ID;
 	int ArgNum;
-	int *ArgTypes;
+	vector<int> ArgTypes;
 	int LineNum;
 } symbolEntry;
 
-typedef struct symbolNode
+struct
 {
 	struct symbolEntry *DATA;
 	int ID; // representing the ID of the Symbol
 	struct symbolNode *Next;
 } symbolNode;
 
-void setSymbol(int type, bool isConstant, bool isFunction, bool isSet, char *name, int ScopeNum, int LineNum);
-void pushSymbol(struct symbolEntry *data);
-void setFunctionSymbol(int ArgNum, int *ArgTypes);
-void printSymbolTable();
+class SymbolTable
+{
+public:
+	SymbolTable();
+	~SymbolTable();
+	static SymbolTable *setSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int ScopeNum, int LineNum);
+	void pushSymbol();
+	void setFunctionSymbol(vector<int> ArgTypes);
+	static void printSymbolTable();
+
+private:
+	static const vector<string> symbolEntryType;
+	static vector<SymbolTable *> AllSymbols;
+	static int SymbolID;
+
+	int ID;
+	int type;
+	bool isConst;
+	bool isUsed;
+	bool isSet;
+	bool isFunctionSymbol;
+	int scope;
+	string name;
+	vector<int> argTypes;
+	int lineNum;
+};
+
 #endif

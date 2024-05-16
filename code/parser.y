@@ -15,17 +15,16 @@
     std::string s;
 
     // function variables
-    int argNum = 0;
-    int argTypes[20];
+    vector<int> argTypes(0);
 
     // operation table
     int tempCount = 0;
-    char *tempVars[32] = {"t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9", "t10", "t11", "t12", "t13", "t14", "t15", "t16",
+    char* tempVars[32] = {"t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9", "t10", "t11", "t12", "t13", "t14", "t15", "t16",
         "t17", "t18", "t19", "t20", "t21", "t22", "t23", "t24", "t25", "t26", "t27", "t28", "t29", "t30", "t31", "t32"
     };
     int tempVarsType[32] = {0};
 
-    char *stringTrue = "true";
+    char* stringTrue = "true";
 
 
 
@@ -150,18 +149,18 @@ STMT: NON_SCOPED_STMT ';'
 // - [ ] Variables and Constants declaration.
 NON_SCOPED_STMT: DATA_TYPE VARIABLE                       { 
             fprintf(stdout, "Variable declaration\n");
-            setSymbol($1, !IS_CONST, !IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
+            SymbolTable::setSymbol($1, !IS_CONST, !IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
         }
     | DATA_TYPE VARIABLE ASSIGN EXPR                      { 
             fprintf(stdout, "Variable declaration with assignment\nvar :%d:%s \nres: %s\n", $1,$2, $4);
-            setSymbol($1, !IS_CONST, !IS_FUNC, IS_SET, $2, scopeNum, yylineno);
+            SymbolTable::setSymbol($1, !IS_CONST, !IS_FUNC, IS_SET, $2, scopeNum, yylineno);
             setQuad($3, $4, NULL, $2);
             // value of all temp registers is reset
             tempCount = 0;
         }
     | CONST DATA_TYPE VARIABLE ASSIGN EXPR                { 
             fprintf(stdout, "Constant declaration with assignment\n");
-            setSymbol($2, IS_CONST, !IS_FUNC, IS_SET, $3, scopeNum, yylineno);
+            SymbolTable::setSymbol($2, IS_CONST, !IS_FUNC, IS_SET, $3, scopeNum, yylineno);
             setQuad($4, $5, NULL, $3);
             // value of all temp registers is reset
             tempCount = 0;
@@ -323,10 +322,11 @@ SCOPED_STMT: FUNCTION STMT_LIST_EPS
 
 FUNCTION: FUNCTION_START '(' PARAMS ')' OPENSCOPE STMT_LIST_EPS RETURN EXPR ';' CLOSESCOPE       { 
             fprintf(stdout, "Function declaration\n"); 
-            setSymbol($1.type, !IS_CONST, IS_FUNC, !IS_SET, $1.name, scopeNum, yylineno);
+            SymbolTable* symb = SymbolTable::setSymbol($1.type, !IS_CONST, IS_FUNC, !IS_SET, $1.name, scopeNum, yylineno);
             // setSymbol($1, !IS_CONST, IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
-            setFunctionSymbol(argNum, argTypes);
-            argNum = 0;
+            if (symb != NULL)
+                symb->setFunctionSymbol(argTypes);
+            argTypes.clear();
         }
     
 FUNCTION_START : DATA_TYPE VARIABLE         {
@@ -341,12 +341,12 @@ PASSED_PARAMS: EXPR
     | PASSED_PARAMS ',' EXPR
 
 PARAMS: DATA_TYPE VARIABLE                  { 
-            argTypes[argNum++] = $1;
-            setSymbol($1, !IS_CONST, !IS_FUNC, IS_SET, $2, scopeNum + 1, yylineno);
+            argTypes.push_back($1);
+            SymbolTable::setSymbol($1, !IS_CONST, !IS_FUNC, IS_SET, $2, scopeNum + 1, yylineno);
         }
     | PARAMS ',' DATA_TYPE VARIABLE         { 
-            argTypes[argNum++] = $3;
-            setSymbol($3, !IS_CONST, !IS_FUNC, IS_SET, $4, scopeNum + 1, yylineno);
+            argTypes.push_back($3);
+            SymbolTable::setSymbol($3, !IS_CONST, !IS_FUNC, IS_SET, $4, scopeNum + 1, yylineno);
         }
     |
 
@@ -385,10 +385,9 @@ CLOSESCOPE: '}'                              { scopeNum--; $$ = createLabelQuad(
 
 int main(int argc, char **argv) {
     printf("============START OF PROGRAM===========\n");
-
     yyparse();
 
-    printSymbolTable(); 
+    SymbolTable::printSymbolTable(); 
     printQuadTable();
     return 0;
 }

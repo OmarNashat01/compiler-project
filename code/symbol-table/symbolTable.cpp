@@ -1,69 +1,56 @@
 #include "symbolTable.hpp"
 
-struct symbolNode *ListTop = NULL;
-int symbolID = 0;
-const char *symbolEntryType[4] = {"int", "float", "char", "bool"};
+const vector<string> SymbolTable::symbolEntryType = {"int", "float", "char", "bool"};
+int SymbolTable::SymbolID = 0;
+vector<SymbolTable *> SymbolTable::AllSymbols;
+SymbolTable::SymbolTable()
+{
+    // Constructor
+    // check if first instance of the class
+    AllSymbols.insert(AllSymbols.begin(), this);
+}
 
-void setSymbol(int rType, bool isConst, bool isFunction, bool isSet, char *Identifier, int ScopeNum, int LineNum)
+SymbolTable *SymbolTable::setSymbol(int type, bool isConst, bool isFunction, bool isSet, string name, int scopeNum, int lineNum)
 {
     // Check if the variable is already declared in the current scope
-    struct symbolNode *ptr = ListTop;
-    while (ptr)
+    for (auto var : AllSymbols)
     {
-        if (strcmp(ptr->DATA->ID, Identifier) == 0 && ptr->DATA->BracesScope == ScopeNum)
+        if (var->name == name && var->scope == scopeNum)
         {
-            printf("Error: Variable %s already declared in the current scope\n", Identifier);
-            return;
+            printf("Error: Variable %s already declared in the current scope\n", name);
+            return NULL;
             // exit(1);
         }
-        ptr = ptr->Next;
     }
+    SymbolTable *newSymbol = new SymbolTable();
+    newSymbol->ID = SymbolID++;
+    newSymbol->type = type;
+    newSymbol->isConst = isConst;
+    newSymbol->isFunctionSymbol = isFunction;
+    newSymbol->isSet = isSet;
+    newSymbol->name = name;
+    newSymbol->scope = scopeNum;
+    newSymbol->lineNum = lineNum;
 
-    // basically a constructor
-    struct symbolEntry *data = (struct symbolEntry *)malloc(sizeof(struct symbolEntry));
-    data->Type = rType;                  // type of the variable from our defines
-    data->isConst = isConst;             // constant or not
-    data->Used = false;                  // used or not
-    data->ID = Identifier;               // name of the variable
-    data->BracesScope = ScopeNum;        // The scope to which it belongs (where it is declared)
-    data->IsFunctionSymbol = isFunction; // initially assume nothing is a function (can be modified later in another function (setFuncArg))
-    data->isSet = isSet;                 // value of the variable
-    data->LineNum = LineNum;             // line number where it is declared
-    pushSymbol(data);                    // push the symbol to the symbol table
+    return newSymbol;
 }
 
-void pushSymbol(struct symbolEntry *data)
+void SymbolTable::setFunctionSymbol(vector<int> ArgTypes)
 {
-    // Insert from Begining in the linked list
-    // This makes checking the variable faster, as we start from the innermost scope
-    struct symbolNode *mySymbolNode = (struct symbolNode *)malloc(sizeof(struct symbolNode));
-    mySymbolNode->ID = symbolID;
-    mySymbolNode->DATA = data;
-    mySymbolNode->Next = ListTop;
-    ListTop = mySymbolNode;
-
-    symbolID++;
+    this->isFunctionSymbol = true;
+    this->argTypes = ArgTypes;
 }
 
-void setFunctionSymbol(int ArgNum, int *ArgTypes)
-{
-    struct symbolEntry *data = ListTop->DATA;
-
-    int *ArgTypesCopy = (int *)malloc(ArgNum * sizeof(int));
-    for (int i = 0; i < ArgNum; i++)
-        ArgTypesCopy[i] = ArgTypes[i];
-
-    // This function is used to set the function symbol
-    data->IsFunctionSymbol = true;
-    data->ArgNum = ArgNum;
-    data->ArgTypes = ArgTypesCopy;
-}
-void printSymbolTable()
+void SymbolTable::printSymbolTable()
 {
     // Print the symbol table
     FILE *fp = fopen("tests/symbolTable.txt", "w");
+    if (fp == NULL)
+    {
+        printf("Error: Unable to open file\n");
+        return;
+    }
 
-    struct symbolNode *ptr = ListTop;
     fprintf(fp, "Symbol Table\n");
     fflush(fp);
 
@@ -77,38 +64,38 @@ void printSymbolTable()
     }
     fprintf(fp, "==========\n");
     fflush(fp);
-    while (ptr)
+    for (auto ptr : AllSymbols)
     {
         fprintf(fp, "%-10d|", ptr->ID);
         fflush(fp);
-        fprintf(fp, "%-10s|", symbolEntryType[ptr->DATA->Type]);
+        fprintf(fp, "%-10s|", symbolEntryType[ptr->type].c_str());
         fflush(fp);
-        fprintf(fp, "%-10s|", ptr->DATA->isConst ? "true" : "false");
+        fprintf(fp, "%-10s|", ptr->isConst ? "true" : "false");
         fflush(fp);
-        fprintf(fp, "%-10s|", ptr->DATA->Used ? "true" : "false");
+        fprintf(fp, "%-10s|", ptr->isUsed ? "true" : "false");
         fflush(fp);
-        fprintf(fp, "%-10s|", ptr->DATA->isSet ? "true" : "false");
+        fprintf(fp, "%-10s|", ptr->isSet ? "true" : "false");
         fflush(fp);
-        fprintf(fp, "%-10s|", ptr->DATA->IsFunctionSymbol ? "true" : "false");
+        fprintf(fp, "%-10s|", ptr->isFunctionSymbol ? "true" : "false");
         fflush(fp);
-        fprintf(fp, "%-10d|", ptr->DATA->BracesScope);
+        fprintf(fp, "%-10d|", ptr->scope);
         fflush(fp);
-        fprintf(fp, "%-10s|", ptr->DATA->ID);
+        fprintf(fp, "%-10s|", ptr->name.c_str());
         fflush(fp);
-        fprintf(fp, "%-10d|", ptr->DATA->LineNum);
+        fprintf(fp, "%-10d|", ptr->lineNum);
         fflush(fp);
 
-        if (ptr->DATA->IsFunctionSymbol)
+        if (ptr->isFunctionSymbol)
         {
-            fprintf(fp, "%-10d|(", ptr->DATA->ArgNum);
+            fprintf(fp, "%-10d|(", ptr->argTypes.size());
             fflush(fp);
             // Print comma-separated ArgTypes with 2-space padding
 
-            for (int i = 0; i < ptr->DATA->ArgNum; i++)
+            for (int i = 0; i < ptr->argTypes.size(); i++)
             {
-                fprintf(fp, "%-2s", symbolEntryType[ptr->DATA->ArgTypes[i]]);
+                fprintf(fp, "%-2s", symbolEntryType[ptr->argTypes[i]].c_str());
                 fflush(fp);
-                if (i != ptr->DATA->ArgNum - 1)
+                if (i != ptr->argTypes.size() - 1)
                 {
                     fprintf(fp, ", "); // Use "%-2s" to print ", " with padding
                     fflush(fp);
@@ -133,7 +120,6 @@ void printSymbolTable()
         }
         fprintf(fp, "----------\n");
         fflush(fp);
-        ptr = ptr->Next;
     }
     fprintf(fp, "End of Symbol Table\n");
     fflush(fp);
