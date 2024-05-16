@@ -8,40 +8,15 @@
 using namespace std;
 
 // Structure for the symbol table
-struct
-{
-	int Type;
-	bool isConst;
-	bool Used;
-	bool isSet;
-	bool IsFunctionSymbol;
-	int BracesScope;
-	string ID;
-	int ArgNum;
-	vector<int> ArgTypes;
-	int LineNum;
-} symbolEntry;
-
-struct
-{
-	struct symbolEntry *DATA;
-	int ID; // representing the ID of the Symbol
-	struct symbolNode *Next;
-} symbolNode;
-
-class SymbolTable
+class SymbolEntry
 {
 public:
-	SymbolTable();
-	~SymbolTable();
-	static SymbolTable *setSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int ScopeNum, int LineNum);
-	void pushSymbol();
+	SymbolEntry(int type, bool isConstant, bool isFunction, bool isSet, string name, int ScopeNum, int LineNum);
+	~SymbolEntry();
 	void setFunctionSymbol(vector<int> ArgTypes);
-	static void printSymbolTable();
+	void printSymbolEntry(FILE *fp);
 
-private:
-	static const vector<string> symbolEntryType;
-	static vector<SymbolTable *> AllSymbols;
+	// private:
 	static int SymbolID;
 
 	int ID;
@@ -55,5 +30,15 @@ private:
 	vector<int> argTypes;
 	int lineNum;
 };
+class SymbolTable
+{
+public:
+	SymbolTable();
+	~SymbolTable();
+	SymbolEntry *addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int ScopeNum, int LineNum);
+	void printSymbolTable();
 
+private:
+	vector<SymbolEntry *> table;
+};
 #endif

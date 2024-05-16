@@ -1,44 +1,121 @@
 #include "symbolTable.hpp"
 
-const vector<string> SymbolTable::symbolEntryType = {"int", "float", "char", "bool"};
-int SymbolTable::SymbolID = 0;
-vector<SymbolTable *> SymbolTable::AllSymbols;
-SymbolTable::SymbolTable()
+const vector<string> symbolEntryType = {"int", "float", "char", "bool"};
+
+int SymbolEntry::SymbolID = 0;
+SymbolEntry::SymbolEntry(int type, bool isConst, bool isFunction, bool isSet, string name, int scopeNum, int lineNum)
 {
     // Constructor
     // check if first instance of the class
-    AllSymbols.insert(AllSymbols.begin(), this);
+    this->ID = SymbolID++;
+    this->type = type;
+    this->isConst = isConst;
+    this->isFunctionSymbol = isFunction;
+    this->isSet = isSet;
+    this->name = name;
+    this->scope = scopeNum;
+    this->lineNum = lineNum;
 }
 
-SymbolTable *SymbolTable::setSymbol(int type, bool isConst, bool isFunction, bool isSet, string name, int scopeNum, int lineNum)
+SymbolEntry::~SymbolEntry()
 {
-    // Check if the variable is already declared in the current scope
-    for (auto var : AllSymbols)
-    {
-        if (var->name == name && var->scope == scopeNum)
-        {
-            printf("Error: Variable %s already declared in the current scope\n", name);
-            return NULL;
-            // exit(1);
-        }
-    }
-    SymbolTable *newSymbol = new SymbolTable();
-    newSymbol->ID = SymbolID++;
-    newSymbol->type = type;
-    newSymbol->isConst = isConst;
-    newSymbol->isFunctionSymbol = isFunction;
-    newSymbol->isSet = isSet;
-    newSymbol->name = name;
-    newSymbol->scope = scopeNum;
-    newSymbol->lineNum = lineNum;
-
-    return newSymbol;
+    // Destructor
 }
 
-void SymbolTable::setFunctionSymbol(vector<int> ArgTypes)
+void SymbolEntry::setFunctionSymbol(vector<int> ArgTypes)
 {
     this->isFunctionSymbol = true;
     this->argTypes = ArgTypes;
+}
+
+void SymbolEntry::printSymbolEntry(FILE *fp)
+{
+    fprintf(fp, "%-10d|", this->ID);
+    fflush(fp);
+    fprintf(fp, "%-10s|", symbolEntryType[this->type].c_str());
+    fflush(fp);
+    fprintf(fp, "%-10s|", this->isConst ? "true" : "false");
+    fflush(fp);
+    fprintf(fp, "%-10s|", this->isUsed ? "true" : "false");
+    fflush(fp);
+    fprintf(fp, "%-10s|", this->isSet ? "true" : "false");
+    fflush(fp);
+    fprintf(fp, "%-10s|", this->isFunctionSymbol ? "true" : "false");
+    fflush(fp);
+    fprintf(fp, "%-10d|", this->scope);
+    fflush(fp);
+    fprintf(fp, "%-10s|", this->name.c_str());
+    fflush(fp);
+    fprintf(fp, "%-10d|", this->lineNum);
+    fflush(fp);
+
+    if (this->isFunctionSymbol)
+    {
+        fprintf(fp, "%-10d|(", this->argTypes.size());
+        fflush(fp);
+        // Print comma-separated ArgTypes with 2-space padding
+
+        for (int i = 0; i < this->argTypes.size(); i++)
+        {
+            fprintf(fp, "%-2s", symbolEntryType[this->argTypes[i]].c_str());
+            fflush(fp);
+            if (i != this->argTypes.size() - 1)
+            {
+                fprintf(fp, ", "); // Use "%-2s" to print ", " with padding
+                fflush(fp);
+            }
+        }
+        fprintf(fp, ")");
+        fflush(fp);
+    }
+    else
+    {
+        fprintf(fp, "%-10s|", "nil");
+        fflush(fp);
+        fprintf(fp, "%-10s", "nil");
+        fflush(fp);
+    }
+    fprintf(fp, "\n");
+    fflush(fp);
+    for (int i = 0; i < 10; i++)
+    {
+        fprintf(fp, "----------|");
+        fflush(fp);
+    }
+    fprintf(fp, "----------\n");
+    fflush(fp);
+}
+
+//////////////////////////////////// SYMBOL TABLE //////////////////////////////////////////////
+SymbolTable::SymbolTable()
+{
+    // Constructor
+}
+
+SymbolTable::~SymbolTable()
+{
+    // Destructor
+    for (auto ptr : this->table)
+    {
+        delete ptr;
+    }
+}
+
+SymbolEntry *SymbolTable::addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int scopeNum, int lineNum)
+{
+    // check if symbol already exists
+    for (auto ptr : this->table)
+    {
+        if (ptr->name == name && ptr->scope == scopeNum)
+        {
+            fprintf(stderr, "Error:%d:  Symbol %s already exists in scope %d\n", ptr->lineNum, name.c_str(), scopeNum);
+            return NULL;
+        }
+    }
+    // Add a symbol to the symbol table
+    SymbolEntry *newSymbol = new SymbolEntry(type, isConstant, isFunction, isSet, name, scopeNum, lineNum);
+    this->table.insert(table.begin(), newSymbol);
+    return newSymbol;
 }
 
 void SymbolTable::printSymbolTable()
@@ -64,62 +141,9 @@ void SymbolTable::printSymbolTable()
     }
     fprintf(fp, "==========\n");
     fflush(fp);
-    for (auto ptr : AllSymbols)
+    for (auto ptr : this->table)
     {
-        fprintf(fp, "%-10d|", ptr->ID);
-        fflush(fp);
-        fprintf(fp, "%-10s|", symbolEntryType[ptr->type].c_str());
-        fflush(fp);
-        fprintf(fp, "%-10s|", ptr->isConst ? "true" : "false");
-        fflush(fp);
-        fprintf(fp, "%-10s|", ptr->isUsed ? "true" : "false");
-        fflush(fp);
-        fprintf(fp, "%-10s|", ptr->isSet ? "true" : "false");
-        fflush(fp);
-        fprintf(fp, "%-10s|", ptr->isFunctionSymbol ? "true" : "false");
-        fflush(fp);
-        fprintf(fp, "%-10d|", ptr->scope);
-        fflush(fp);
-        fprintf(fp, "%-10s|", ptr->name.c_str());
-        fflush(fp);
-        fprintf(fp, "%-10d|", ptr->lineNum);
-        fflush(fp);
-
-        if (ptr->isFunctionSymbol)
-        {
-            fprintf(fp, "%-10d|(", ptr->argTypes.size());
-            fflush(fp);
-            // Print comma-separated ArgTypes with 2-space padding
-
-            for (int i = 0; i < ptr->argTypes.size(); i++)
-            {
-                fprintf(fp, "%-2s", symbolEntryType[ptr->argTypes[i]].c_str());
-                fflush(fp);
-                if (i != ptr->argTypes.size() - 1)
-                {
-                    fprintf(fp, ", "); // Use "%-2s" to print ", " with padding
-                    fflush(fp);
-                }
-            }
-            fprintf(fp, ")");
-            fflush(fp);
-        }
-        else
-        {
-            fprintf(fp, "%-10s|", "nil");
-            fflush(fp);
-            fprintf(fp, "%-10s", "nil");
-            fflush(fp);
-        }
-        fprintf(fp, "\n");
-        fflush(fp);
-        for (int i = 0; i < 10; i++)
-        {
-            fprintf(fp, "----------|");
-            fflush(fp);
-        }
-        fprintf(fp, "----------\n");
-        fflush(fp);
+        ptr->printSymbolEntry(fp);
     }
     fprintf(fp, "End of Symbol Table\n");
     fflush(fp);
