@@ -5,6 +5,7 @@
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unordered_map>
 using namespace std;
 
 // Structure for the symbol table
@@ -15,8 +16,11 @@ public:
 	~SymbolEntry();
 	void setFunctionSymbol(vector<int> ArgTypes);
 	void printSymbolEntry(FILE *fp);
+	bool equalTo(string name, int scope);
 
-	// private:
+	int lineNum;
+
+private:
 	static int SymbolID;
 
 	int ID;
@@ -28,17 +32,43 @@ public:
 	int scope;
 	string name;
 	vector<int> argTypes;
-	int lineNum;
 };
+
 class SymbolTable
 {
 public:
 	SymbolTable();
 	~SymbolTable();
 	SymbolEntry *addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int ScopeNum, int LineNum);
-	void printSymbolTable();
+
+	void addScope() { scope++; }
+	void removeScope() { scope--; }
+
+	void printSymbolTable(FILE *fp);
 
 private:
 	vector<SymbolEntry *> table;
+	int scope;
+};
+
+class SymbolTables
+{
+public:
+	SymbolTables();
+	~SymbolTables();
+
+	SymbolEntry *addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int ScopeNum, int LineNum);
+
+	void addScope();
+	void removeScope();
+
+	void startFunction(string name) { currentScope = name; }
+	void endFunction() { currentScope = "global"; }
+
+	void printSymbolTables();
+
+private:
+	unordered_map<string, SymbolTable *> tables;
+	string currentScope;
 };
 #endif

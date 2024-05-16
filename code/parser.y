@@ -4,7 +4,7 @@
     #include "operation-table/operationTable.hpp"
     #include "symbol-table/symbolTable.hpp"
 
-    SymbolTable symbolTable;
+    SymbolTables symbolTables;
 
 
     int yyerror(const char *s) {
@@ -151,18 +151,18 @@ STMT: NON_SCOPED_STMT ';'
 // - [ ] Variables and Constants declaration.
 NON_SCOPED_STMT: DATA_TYPE VARIABLE                       { 
             fprintf(stdout, "Variable declaration\n");
-            symbolTable.addSymbol($1, !IS_CONST, !IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
+            symbolTables.addSymbol($1, !IS_CONST, !IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
         }
     | DATA_TYPE VARIABLE ASSIGN EXPR                      { 
             fprintf(stdout, "Variable declaration with assignment\nvar :%d:%s \nres: %s\n", $1,$2, $4);
-            symbolTable.addSymbol($1, !IS_CONST, !IS_FUNC, IS_SET, $2, scopeNum, yylineno);
+            symbolTables.addSymbol($1, !IS_CONST, !IS_FUNC, IS_SET, $2, scopeNum, yylineno);
             setQuad($3, $4, NULL, $2);
             // value of all temp registers is reset
             tempCount = 0;
         }
     | CONST DATA_TYPE VARIABLE ASSIGN EXPR                { 
             fprintf(stdout, "Constant declaration with assignment\n");
-            symbolTable.addSymbol($2, IS_CONST, !IS_FUNC, IS_SET, $3, scopeNum, yylineno);
+            symbolTables.addSymbol($2, IS_CONST, !IS_FUNC, IS_SET, $3, scopeNum, yylineno);
             setQuad($4, $5, NULL, $3);
             // value of all temp registers is reset
             tempCount = 0;
@@ -324,17 +324,19 @@ SCOPED_STMT: FUNCTION STMT_LIST_EPS
 
 FUNCTION: FUNCTION_START '(' PARAMS ')' OPENSCOPE STMT_LIST_EPS RETURN EXPR ';' CLOSESCOPE       { 
             fprintf(stdout, "Function declaration\n"); 
-            SymbolEntry* symb = symbolTable.addSymbol($1.type, !IS_CONST, IS_FUNC, !IS_SET, $1.name, scopeNum, yylineno);
+            SymbolEntry* symb = symbolTables.addSymbol($1.type, !IS_CONST, IS_FUNC, !IS_SET, $1.name, scopeNum, yylineno);
             // addSymbol($1, !IS_CONST, IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
             if (symb != NULL)
                 symb->setFunctionSymbol(argTypes);
             argTypes.clear();
+            symbolTables.endFunction();
         }
     
 FUNCTION_START : DATA_TYPE VARIABLE         {
             // jump if true
             $$.type = $1;
             $$.name = $2;
+            SymbolTables.startFunction($2);
         }     
 
 EXPR: VARIABLE '(' PASSED_PARAMS ')'        { fprintf(stdout, "Function call\n"); }
@@ -344,11 +346,11 @@ PASSED_PARAMS: EXPR
 
 PARAMS: DATA_TYPE VARIABLE                  { 
             argTypes.push_back($1);
-            symbolTable.addSymbol($1, !IS_CONST, !IS_FUNC, IS_SET, $2, scopeNum + 1, yylineno);
+            symbolTables.addSymbol($1, !IS_CONST, !IS_FUNC, IS_SET, $2, scopeNum + 1, yylineno);
         }
     | PARAMS ',' DATA_TYPE VARIABLE         { 
             argTypes.push_back($3);
-            symbolTable.addSymbol($3, !IS_CONST, !IS_FUNC, IS_SET, $4, scopeNum + 1, yylineno);
+            symbolTables.addSymbol($3, !IS_CONST, !IS_FUNC, IS_SET, $4, scopeNum + 1, yylineno);
         }
     |
 
@@ -389,7 +391,7 @@ int main(int argc, char **argv) {
     printf("============START OF PROGRAM===========\n");
     yyparse();
 
-    symbolTable.printSymbolTable(); 
+    symbolTables.printSymbolTables(); 
     printQuadTable();
     return 0;
 }

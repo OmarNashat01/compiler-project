@@ -27,7 +27,12 @@ void SymbolEntry::setFunctionSymbol(vector<int> ArgTypes)
     this->isFunctionSymbol = true;
     this->argTypes = ArgTypes;
 }
-
+bool SymbolEntry::equalTo(string name, int scope)
+{
+    if (this->name == name && this->scope == scope)
+        return true;
+    return false;
+}
 void SymbolEntry::printSymbolEntry(FILE *fp)
 {
     fprintf(fp, "%-10d|", this->ID);
@@ -106,7 +111,7 @@ SymbolEntry *SymbolTable::addSymbol(int type, bool isConstant, bool isFunction, 
     // check if symbol already exists
     for (auto ptr : this->table)
     {
-        if (ptr->name == name && ptr->scope == scopeNum)
+        if (ptr->equalTo(name, scopeNum))
         {
             fprintf(stderr, "Error:%d:  Symbol %s already exists in scope %d\n", ptr->lineNum, name.c_str(), scopeNum);
             return NULL;
@@ -118,16 +123,9 @@ SymbolEntry *SymbolTable::addSymbol(int type, bool isConstant, bool isFunction, 
     return newSymbol;
 }
 
-void SymbolTable::printSymbolTable()
+void SymbolTable::printSymbolTable(FILE *fp)
 {
     // Print the symbol table
-    FILE *fp = fopen("tests/symbolTable.txt", "w");
-    if (fp == NULL)
-    {
-        printf("Error: Unable to open file\n");
-        return;
-    }
-
     fprintf(fp, "Symbol Table\n");
     fflush(fp);
 
@@ -148,4 +146,56 @@ void SymbolTable::printSymbolTable()
     fprintf(fp, "End of Symbol Table\n");
     fflush(fp);
     fclose(fp);
+}
+
+//////////////////////////////////// SYMBOL TABLES //////////////////////////////////////////////
+SymbolTables::SymbolTables()
+{
+    // Constructor
+    this->currentScope = "global";
+    this->tables.insert(make_pair(this->currentScope, new SymbolTable()));
+}
+
+SymbolTables::~SymbolTables()
+{
+    // Destructor
+    for (auto ptr : this->tables)
+    {
+        delete ptr.second;
+    }
+}
+
+SymbolEntry *SymbolTables::addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int scopeNum, int lineNum)
+{
+    // Add a symbol to the symbol table
+    return this->tables[this->currentScope]->addSymbol(type, isConstant, isFunction, isSet, name, scopeNum, lineNum);
+}
+
+void SymbolTables::addScope()
+{
+    // Add a new scope
+    this->tables[this->currentScope]->addScope();
+}
+void SymbolTables::removeScope()
+{
+    // Remove the current scope
+    this->tables[this->currentScope]->removeScope();
+}
+
+void SymbolTables::printSymbolTables()
+{
+    // Print the symbol table
+    FILE *fp = fopen("tests/symbolTable.txt", "w");
+    if (fp == NULL)
+    {
+        printf("Error: Unable to open file\n");
+        return;
+    }
+
+    for (auto ptr : this->tables)
+    {
+        fprintf(fp, "Scope: %s\n", ptr.first.c_str());
+        fflush(fp);
+        ptr.second->printSymbolTable(fp);
+    }
 }
