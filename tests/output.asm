@@ -1,19 +1,19 @@
 ============START OF PROGRAM===========
 Lbl_0
-INT_LITERAL
+INT_LITERAL 
 DATA_LITERALS
 Variable declaration with assignment
 var :0:x 
 res: t1
-INT_LITERAL
+INT_LITERAL 
 DATA_LITERALS
 Variable declaration with assignment
 var :0:y 
 res: t1
-INT_LITERAL
+INT_LITERAL 
 DATA_LITERALS
 Constant declaration with assignment
-INT_LITERAL
+INT_LITERAL 
 DATA_LITERALS
 Variable declaration with assignment
 var :0:i 
@@ -24,7 +24,7 @@ EXPR (1) EXPR
 i INC
 Floating EXPR statement
 Lbl_3
-INT_LITERAL
+INT_LITERAL 
 DATA_LITERALS
 Assignment statement
 y INC

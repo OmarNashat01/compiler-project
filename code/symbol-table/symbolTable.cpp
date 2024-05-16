@@ -106,19 +106,19 @@ SymbolTable::~SymbolTable()
     }
 }
 
-SymbolEntry *SymbolTable::addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int scopeNum, int lineNum)
+SymbolEntry *SymbolTable::addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int lineNum)
 {
     // check if symbol already exists
     for (auto ptr : this->table)
     {
-        if (ptr->equalTo(name, scopeNum))
+        if (ptr->equalTo(name, this->scope))
         {
-            fprintf(stderr, "Error:%d:  Symbol %s already exists in scope %d\n", ptr->lineNum, name.c_str(), scopeNum);
+            fprintf(stderr, "Error:%d:  Symbol %s already exists in scope %d\n", ptr->lineNum, name.c_str(), this->scope);
             return NULL;
         }
     }
     // Add a symbol to the symbol table
-    SymbolEntry *newSymbol = new SymbolEntry(type, isConstant, isFunction, isSet, name, scopeNum, lineNum);
+    SymbolEntry *newSymbol = new SymbolEntry(type, isConstant, isFunction, isSet, name, this->scope, lineNum);
     this->table.insert(table.begin(), newSymbol);
     return newSymbol;
 }
@@ -164,10 +164,10 @@ SymbolTables::~SymbolTables()
     }
 }
 
-SymbolEntry *SymbolTables::addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int scopeNum, int lineNum)
+SymbolEntry *SymbolTables::addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int lineNum)
 {
     // Add a symbol to the symbol table
-    return this->tables[this->currentScope]->addSymbol(type, isConstant, isFunction, isSet, name, scopeNum, lineNum);
+    return this->tables[this->currentScope]->addSymbol(type, isConstant, isFunction, isSet, name, lineNum);
 }
 
 void SymbolTables::addScope()

@@ -1,12 +1,12 @@
 #include "operationTable.hpp"
 
-quadNode *TopPtr = NULL; // (head) top of the list
-int quadID = 0;          // ID of the quad
-int labelID = 0;         // ID of the label
-quadNode *currentFunction = NULL;
-functionsTable *functionsTop = NULL;
+// quadNode *TopPtr = NULL; // (head) top of the list
+// int quadID = 0;          // ID of the quad
+// int labelID = 0;         // ID of the label
+// quadNode *currentFunction = NULL;
+// functionsTable *functionsTop = NULL;
 
-char *operationType[] = {
+vector<string> operationType = {
     ">",
     "<",
     ">=",
@@ -39,112 +39,75 @@ char *operationType[] = {
     "SETLiteral",
     "SetLabel"};
 
-void pushFunction(char *name, char **args, int argsCount)
+OperationEntry::OperationEntry(int op, string arg1, string arg2, string res)
 {
-    struct functionsTable *newFunction = (struct functionsTable *)malloc(sizeof(functionsTable));
-    newFunction->name = name;
-    newFunction->next = functionsTop;
-    newFunction->quad = TopPtr;
-    functionsTop = newFunction;
-    struct quadNode *quad = (struct quadNode *)malloc(sizeof(struct quadNode));
-
-    currentFunction = quad;
-
-    // return quad;
+    this->op = op;
+    this->arg1 = arg1;
+    this->arg2 = arg2;
+    this->res = res;
+}
+OperationEntry::~OperationEntry()
+{
+    // destructor
 }
 
-struct quadEntry *setQuad(int op, char *arg1, char *arg2, char *res)
+void OperationEntry::editJumpQuad(string scope, int jmpID)
 {
-    // basically a constructor
-    struct quadEntry *data = (struct quadEntry *)malloc(sizeof(struct quadEntry));
-    data->op = op;
-    data->arg1 = arg1;
-    data->arg2 = arg2;
-    data->res = res;
-    data->type = -1;
-    pushQuad(data);
-    return data;
+    this->res = "LBL:" + scope + ":" + to_string(jmpID);
 }
 
-void editJumpQuad(struct quadEntry *data, int jmpID)
+void OperationEntry::createLabelQuad(string scope, int labelID)
 {
-    data->res = (char *)malloc(10);
-    sprintf(data->res, "LBL_%d", jmpID);
-    return;
+    this->res = "LBL:" + scope + ":" + to_string(labelID);
+    labelID++;
 }
 
-int createLabelQuad(void)
+void OperationEntry::printOperationEntry(FILE *fp)
 {
-    char *label = (char *)malloc(10);
-    sprintf(label, "LBL_%d", labelID);
-    setQuad(30, NULL, NULL, label);
-    return labelID++;
-}
-int createLabelQuadWithName(char *name)
-{
-    // get length of the string
-    char *label = (char *)malloc(4 + strlen(name));
-    sprintf(label, "LBL_%s", name);
-    setQuad(30, NULL, NULL, label);
-    return labelID++;
-}
-
-void setLiteralQuad(int type, char *arg1, char *res)
-{
-
-    struct quadEntry *data = (struct quadEntry *)malloc(sizeof(struct quadEntry));
-    data->op = 29;
-    data->arg1 = arg1;
-    data->arg2 = NULL;
-    data->res = res;
-    data->type = type;
-    pushQuad(data);
-    return;
-}
-
-void pushQuad(quadEntry *data)
-{
-
-    // first node
-    if (!TopPtr)
-    {
-        struct quadNode *myQuadlNode = (struct quadNode *)malloc(sizeof(struct quadNode));
-        myQuadlNode->ID = quadID;
-        myQuadlNode->DATA = data;
-        myQuadlNode->Next = NULL;
-        TopPtr = myQuadlNode;
-
-        quadID++;
-        return;
-    }
-
-    // get last node
-    struct quadNode *ptr = TopPtr;
-    while (ptr->Next)
-        ptr = ptr->Next;
-
-    struct quadNode *myQuadlNode = (struct quadNode *)malloc(sizeof(struct quadNode));
-    myQuadlNode->ID = quadID;
-    myQuadlNode->DATA = data;
-    myQuadlNode->Next = NULL;
-    ptr->Next = myQuadlNode;
-
-    quadID++;
-}
-
-void printQuadTable()
-{
-    FILE *fp = fopen("tests/quadTable.txt", "w");
-    if (!fp)
-    {
-        fprintf(stderr, "Error: Unable to open file\n");
-        return;
-    }
-    fprintf(fp, "Quad Table\n");
+    fprintf(fp, "%-10s|%-10s|%-10s|%-10s",
+            operationType[this->op].c_str(),
+            this->arg1.c_str(),
+            this->arg2.c_str(),
+            this->res.c_str());
     fflush(fp);
+    fprintf(fp, "\n");
+    fflush(fp);
+    fprintf(fp, "----------|----------|----------|----------\n");
+    fflush(fp);
+}
 
-    // Print the symbol table
-    struct quadNode *ptr = TopPtr;
+///////////////////// OperationTable //////////////////////
+OperationTable::OperationTable()
+{
+    labelCounter = 0;
+}
+
+OperationTable::~OperationTable()
+{
+    // destructor
+    for (auto &entry : table)
+    {
+        delete entry;
+    }
+}
+
+int OperationTable::createLabelQuad(string scope)
+{
+    this->addQuad(28, "", "", "LBL:" + scope + ":" + to_string(this->labelCounter));
+    return this->labelCounter++;
+}
+
+OperationEntry *OperationTable::addQuad(int op, string arg1, string arg2, string res)
+{
+    OperationEntry *entry = new OperationEntry(op, arg1, arg2, res);
+    table.push_back(entry);
+    return entry;
+}
+
+void OperationTable::printOperationTable(FILE *fp)
+{
+    fprintf(fp, "Operation Table\n");
+    fflush(fp);
 
     fprintf(fp, "%-10s|%-10s|%-10s|%-10s\n",
             "OP", "arg1", "arg2", "Result");
@@ -157,26 +120,66 @@ void printQuadTable()
     }
     fprintf(fp, "==========\n");
     fflush(fp);
-    while (ptr)
-    {
-        fprintf(fp, "%-10s|%-10s|%-10s|%-10s",
-                operationType[ptr->DATA->op],
-                ptr->DATA->arg1 ? ptr->DATA->arg1 : "nil",
-                ptr->DATA->arg2 ? ptr->DATA->arg2 : "nil",
-                ptr->DATA->res ? ptr->DATA->res : "nil");
-        fflush(fp);
-        fprintf(fp, "\n");
-        fflush(fp);
 
-        for (int i = 0; i < 3; i++)
-        {
-            fprintf(fp, "----------|");
-            fflush(fp);
-        }
-        fprintf(fp, "----------\n");
-        fflush(fp);
-        ptr = ptr->Next;
+    for (auto &entry : table)
+    {
+        entry->printOperationEntry(fp);
     }
-    fprintf(fp, "End of Quad Table\n");
+
+    fprintf(fp, "End of Operation Table\n");
+    fflush(fp);
+}
+
+///////////////////// OperationTables //////////////////////
+OperationTables::OperationTables()
+{
+    currentFunction = "global";
+    tables[currentFunction] = new OperationTable();
+}
+
+OperationTables::~OperationTables()
+{
+    // destructor
+    for (auto &table : tables)
+    {
+        delete table.second;
+    }
+}
+
+OperationEntry *OperationTables::addQuad(int op, string arg1, string arg2, string res)
+{
+    return tables[currentFunction]->addQuad(op, arg1, arg2, res);
+}
+
+void OperationTables::editJumpQuad(OperationEntry *entry, int jmpID)
+{
+    entry->editJumpQuad(this->currentFunction, jmpID);
+}
+
+int OperationTables::createLabelQuad()
+{
+    return tables[currentFunction]->createLabelQuad(this->currentFunction);
+}
+
+void OperationTables::startFunction(string name)
+{
+    currentFunction = name;
+    tables[currentFunction] = new OperationTable();
+}
+
+void OperationTables::endFunction()
+{
+    currentFunction = "global";
+}
+
+void OperationTables::printFunctionsTables()
+{
+    FILE *fp = fopen("tests/operationTable.txt", "w");
+    for (auto &table : tables)
+    {
+        fprintf(fp, "Function: %s\n", table.first.c_str());
+        fflush(fp);
+        table.second->printOperationTable(fp);
+    }
     fclose(fp);
 }

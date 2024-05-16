@@ -39,7 +39,7 @@ class SymbolTable
 public:
 	SymbolTable();
 	~SymbolTable();
-	SymbolEntry *addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int ScopeNum, int LineNum);
+	SymbolEntry *addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int LineNum);
 
 	void addScope() { scope++; }
 	void removeScope() { scope--; }
@@ -57,7 +57,7 @@ public:
 	SymbolTables();
 	~SymbolTables();
 
-	SymbolEntry *addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int ScopeNum, int LineNum);
+	SymbolEntry *addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int LineNum);
 
 	void addScope();
 	void removeScope();
