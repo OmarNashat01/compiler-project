@@ -1,8 +1,8 @@
 %{
     #include <stdio.h>
 	#include <string.h>	
-    #include "operation-table/operationTable.h"
-    #include "symbol-table/symbolTable.h"
+    #include "operation-table/operationTable.hpp"
+    #include "symbol-table/symbolTable.hpp"
 
 
     int yyerror(const char *s) {
@@ -12,6 +12,7 @@
     int yylex(void);
 	int yylineno = 1;
     int scopeNum = 0;
+    std::string s;
 
     // function variables
     int argNum = 0;
@@ -48,6 +49,11 @@
         int open;
         int close;
     } block;
+
+    struct functionHead{
+        int type;
+        char *name;
+    } functionHead;
 
     struct forLoop {
         int beforeExpr, beforeUpdate;
@@ -104,8 +110,9 @@
 
 %type <block> BLOCK
 %type <ival> OPENSCOPE CLOSESCOPE WHILE_TOK FOR_STMT
-%type <ptr> IF_COND ELSE_TOK WHILE_COND FUNCTION_START
+%type <ptr> IF_COND ELSE_TOK WHILE_COND 
 %type <forLoop> FOR_HEAD FOR_COND
+%type <functionHead> FUNCTION_START
 
 // associativity rules
 %left INC DEC
@@ -228,15 +235,15 @@ SCOPED_STMT: IF_COND BLOCK                                 {
             fprintf(stdout, "IF statement\n");
             // value of all temp registers is reset
             tempCount = 0;
-            editJumpQuad($1, $2.close);
+            editJumpQuad(reinterpret_cast<quadEntry*>($1), $2.close);
         }
     
     | IF_COND BLOCK ELSE_TOK BLOCK                             {
             fprintf(stdout, "IF-ELSE statement\n");
             // value of all temp registers is reset
             tempCount = 0;
-            editJumpQuad($1, $4.open);
-            editJumpQuad($3, $4.close);
+            editJumpQuad(reinterpret_cast<quadEntry*>($1), $4.open);
+            editJumpQuad(reinterpret_cast<quadEntry*>($3), $4.close);
         }
     | WHILE_TOK WHILE_COND BLOCK                                     {
             fprintf(stdout, "WHILE statement\n"); 
@@ -246,7 +253,7 @@ SCOPED_STMT: IF_COND BLOCK                                 {
             struct quadEntry* q = setQuad(27, stringTrue, NULL, NULL);
             editJumpQuad(q, $1);
             // create new label and jump to it if false
-            editJumpQuad($2, createLabelQuad());
+            editJumpQuad(reinterpret_cast<quadEntry*>($2), createLabelQuad());
         }
         
     | DO BLOCK WHILE '(' BOOL_EXPR ')' ';'                              {
@@ -267,15 +274,15 @@ SCOPED_STMT: IF_COND BLOCK                                 {
             editJumpQuad(q, $1.beforeUpdate);
 
             // jump to  start scope to skip the update part
-            editJumpQuad($1.jmpStart, $2.open);
+            editJumpQuad(reinterpret_cast<quadEntry*>($1.jmpStart), $2.open);
 
             // jump to end if false
-            editJumpQuad($1.jmpEnd, createLabelQuad());
+            editJumpQuad(reinterpret_cast<quadEntry*>($1.jmpEnd), createLabelQuad());
         }
     | SWITCH '(' VARIABLE ')' OPENSCOPE CASES CLOSESCOPE                            { fprintf(stdout, "SWITCH statement\n"); }
 
 FOR_HEAD :  FOR_STMT FOR_COND NON_SCOPED_STMT ')'                                            {
-            void* ptr = setQuad(27, stringTrue, NULL, NULL);
+            struct quadEntry* ptr = setQuad(27, stringTrue, NULL, NULL);
             editJumpQuad(ptr, $$.beforeExpr);
             $$.jmpEnd = $2.jmpEnd;
             $$.jmpStart = $2.jmpStart;
@@ -316,15 +323,16 @@ SCOPED_STMT: FUNCTION STMT_LIST_EPS
 
 FUNCTION: FUNCTION_START '(' PARAMS ')' OPENSCOPE STMT_LIST_EPS RETURN EXPR ';' CLOSESCOPE       { 
             fprintf(stdout, "Function declaration\n"); 
-            setSymbol($1, !IS_CONST, IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
+            setSymbol($1.type, !IS_CONST, IS_FUNC, !IS_SET, $1.name, scopeNum, yylineno);
+            // setSymbol($1, !IS_CONST, IS_FUNC, !IS_SET, $2, scopeNum, yylineno);
             setFunctionSymbol(argNum, argTypes);
             argNum = 0;
         }
     
 FUNCTION_START : DATA_TYPE VARIABLE         {
             // jump if true
-            $$ = setQuad(27, stringTrue, NULL, NULL);
-            setLabelQuad($2);
+            $$.type = $1;
+            $$.name = $2;
         }     
 
 EXPR: VARIABLE '(' PASSED_PARAMS ')'        { fprintf(stdout, "Function call\n"); }

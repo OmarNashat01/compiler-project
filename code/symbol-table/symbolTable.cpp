@@ -1,4 +1,4 @@
-#include "symbolTable.h"
+#include "symbolTable.hpp"
 
 struct symbolNode *ListTop = NULL;
 int symbolID = 0;

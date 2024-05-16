@@ -36,6 +36,7 @@ add_custom_target(parser DEPENDS ${PROJECT_SOURCE_DIR}/parser.c)
 find_library(symbol_table_path NAMES symbol_table PATHS ${CMAKE_LIBRARY_PATH} ${PROJECT_SOURCE_DIR}/build/symbol-table)  # Adjust paths as needed
 find_library(operation_table_path NAMES operation_table PATHS ${CMAKE_LIBRARY_PATH} ${PROJECT_SOURCE_DIR}/build/operation-table)  # Adjust paths as needed
 
+set_source_files_properties(${PROJECT_SOURCE_DIR}/lexer.yy.c ${PROJECT_SOURCE_DIR}/parser.c PROPERTIES LANGUAGE CXX)
 # Create the executable
 add_executable(c_compiler ${PROJECT_SOURCE_DIR}/lexer.yy.c ${PROJECT_SOURCE_DIR}/parser.c )
 

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#pragma warning(disable : 4996) // disables warning for deprecated functions
+// #pragma warning(disable : 4996) // disables warning for deprecated functions
 
 #ifndef SYMBOL_TABLE_H
 #define SYMBOL_TABLE_H
