@@ -152,8 +152,8 @@ BLOCK: OPENSCOPE STMT_LIST CLOSESCOPE { $$.open = $1; $$.close = $3; }
 
 STMT_LIST_EPS: STMT_LIST | 
 
-STMT_LIST: error ';'                                      { fprintf(stderr, "Syntax error in line: %d\n", yylineno); }
-    | error CLOSESCOPE                                    { fprintf(stderr, "Syntax error in line: %d\n", yylineno); }
+STMT_LIST: error ';'                                      { fprintf(stderr, "Error:%d: incorrect syntax \n", yylineno); }
+    | error CLOSESCOPE                                    { fprintf(stderr, "Error:%d: incorrect syntax\n", yylineno); }
 
 
 STMT: NON_SCOPED_STMT ';'
@@ -428,6 +428,7 @@ FUNCTION: FUNCTION_START '(' PARAMS ')' OPENSCOPE STMT_LIST_EPS  RETURN EXPR ';'
             if ($1.symbol != NULL)
                 reinterpret_cast<SymbolEntry*>($1.symbol)->setFunctionSymbol(argTypes);
             
+            opTables.addQuad(19, $8.var, "NULL", tempVars[tempCount]);
             opTables.addQuad(32, "NULL", "NULL", "NULL");
             argTypes.clear();
             symbolTables.endFunction();
@@ -487,6 +488,8 @@ EXPR: VARIABLE '(' PASSED_PARAMS ')'        {
     }
     passedArgs.clear();
     passedArgsTypes.clear();
+    $$.var = tempVars[tempCount++].data();
+    $$.type = func->type;
 }
 
 PASSED_PARAMS: EXPR                         {

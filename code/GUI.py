@@ -2,10 +2,9 @@ import tkinter as tk
 from tkinter import messagebox
 import customtkinter as ctk
 from customtkinter import filedialog, CTkFrame, CTkTextbox, CTkButton, CTkToplevel
-import pandas as pd
-from pandastable import Table, TableModel
-
 import os
+
+import subprocess
 
 
 class FileTableApp:
@@ -74,12 +73,19 @@ class FileTableApp:
 
     def compile_and_show(self):
         exe_path = "build\\c_compiler.exe"
+        self.textArea.tag_remove("error", "1.0", "end")
 
         with open("temp.cpp", "w") as file:
             file.write(self.textArea.get("1.0", tk.END))
 
         try:
-            os.system(f"cmd /c type temp.cpp | {exe_path}")
+            process = subprocess.Popen(
+                ["cmd", "/c", f"type temp.cpp | {exe_path}"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output, error = process.communicate()
+            print(error.decode())
+            self.show_errors(
+                [line for line in error.decode().split("\n") if line])
+
             self.display_text_table("tests/operationTable.txt", "OP table")
             self.display_text_table("tests/symbolTable.txt", "Symbol table")
         except Exception as e:
@@ -102,37 +108,23 @@ class FileTableApp:
 
             # Create the table
             table = CTkTextbox(table_frame,
-                               font=("Arial", 12), wrap=tk.NONE, width=500, height=500)
+                               font=("Courier", 14), wrap=tk.NONE, width=800, height=800)
             table.insert(tk.END, content)
             table.pack(expand=True, fill=tk.BOTH)
 
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
 
-    def display_table(self, file_path):
-        try:
-            if file_path.endswith('.csv'):
-                df = pd.read_csv(file_path)
-            elif file_path.endswith('.xlsx'):
-                df = pd.read_excel(file_path)
-            else:
-                raise ValueError("Unsupported file format")
+    def show_errors(self, errors):
 
-            # Create a new window
-            table_window = CTkToplevel(self.root)
-            table_window.title("Table Window")
+        for error in errors:
+            message = error
+            line = int(message.split(":")[1])
+            start = f"{line}.0"
+            end = f"{line}.0 lineend"
 
-            # Create a frame to hold the table
-            table_frame = CTkFrame(table_window)
-            table_frame.pack(expand=True, pady=10)
-
-            # Create the table
-            table = Table(table_frame, dataframe=df,
-                          showtoolbar=True, showstatusbar=True)
-            table.show()
-
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred: {e}")
+            self.textArea.tag_add("error", start, end)
+            self.textArea.tag_config(f"error", foreground="red")
 
 
 def main():

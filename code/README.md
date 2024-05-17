@@ -1,4 +1,14 @@
-## Projcet Overview:
+---
+title: "Compilers Project Report (CMPN403)"
+author: 
+    - Omar Alaa (1190377)
+    - Omar Nashat (1190430)
+    - Rana Gamal (1190449)
+
+date: \today
+---
+
+## Project Overview:
 
 This project is a compiler for a custom language that is a subset of C. The compiler is written in C++ and uses flex and bison for lexical and syntax analysis. The compiler generates quads and symbol tables for the input code. The compiler also has a GUI written in Python using Tkinter. The GUI allows the user to write or import code in the custom language and then compile it.
 
@@ -14,6 +24,8 @@ This project is a compiler for a custom language that is a subset of C. The comp
 - **Language:** Python
 - **Framework:** Custom Tkinter
 
+
+\pagebreak
 
 ## Tokens:
 - **PROGRAM:** The whole program
@@ -60,9 +72,11 @@ This project is a compiler for a custom language that is a subset of C. The comp
 - **PASSED_PARAMS:** Passed function parameters
 - **RETURN:** Return statement
 
+
+\pagebreak
+
 ## Quads:
 
-// make table containing all operations
 | ID | Operation | Description |
 | -- | --------- | ----------- |
 | 0  |    `>`    |Greater than |
