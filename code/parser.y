@@ -7,7 +7,10 @@
     SymbolTables symbolTables;
     OperationTables opTables;
 
-    vector<string> dataTypes = {"int", "float", "char", "bool"};
+    vector<string> dataTypes = {"int", "float", "char", "bool", "undefined"};
+    vector<string> switchVars(0);
+    vector<int> switchVarsTypes(0);
+
 
     int yyerror(const char *s) {
         fprintf(stdout, "%s\n", s);
@@ -15,17 +18,17 @@
     }
     int yylex(void);
 	int yylineno = 1;
-    std::string s;
 
     // function variables
     vector<int> argTypes(0);
+    vector<string> passedArgs(0);
+    vector<int> passedArgsTypes(0);
 
     // operation table
     int tempCount = 0;
     vector<string> tempVars = {"t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9", "t10", "t11", "t12", "t13", "t14", "t15", "t16",
         "t17", "t18", "t19", "t20", "t21", "t22", "t23", "t24", "t25", "t26", "t27", "t28", "t29", "t30", "t31", "t32"
     };
-    vector<int> tempVarsType(32, -1);
 
     string stringTrue = "true";
 
@@ -73,7 +76,7 @@
 
 
 // keywords
-%token IF ELSE FOR WHILE DO RETURN VOID BREAK CONTINUE SWITCH CASE DEFAULT CONST STATIC CLASS
+%token IF ELSE FOR WHILE DO RETURN BREAK SWITCH CASE CONST VOID CONTINUE DEFAULT STATIC CLASS
  
 // types
 %token CHAR INT FLOAT BOOL
@@ -118,7 +121,7 @@
 
 %type <block> BLOCK
 %type <ival> OPENSCOPE CLOSESCOPE WHILE_TOK FOR_STMT
-%type <ptr> IF_COND ELSE_TOK WHILE_COND 
+%type <ptr> IF_COND ELSE_TOK WHILE_COND CASE_STMT_COND
 %type <forLoop> FOR_HEAD FOR_COND
 %type <functionHead> FUNCTION_START
 
@@ -185,13 +188,16 @@ NON_SCOPED_STMT: DATA_TYPE VARIABLE                       {
             // value of all temp registers is reset
             tempCount = 0;
         }
-    | BREAK
+    /* | BREAK */
 
 // - [ ] Assign stataments.
 NON_SCOPED_STMT: VARIABLE ASSIGN_OP EXPR                  { 
             fprintf(stdout, "(%s) statement\n", $1);
-
-            if (symbolTables.getVarType($1) != $3.type){
+            int type = symbolTables.getVarType($1);
+            if (type == 4){
+                fprintf(stderr, "Error:%d: variable %s not declared\n", yylineno, $1);
+            }
+            else if (type != $3.type){
                 fprintf(stderr, "Error:%d: Type mismatch in assignment\n", yylineno);
             }
 
@@ -201,8 +207,11 @@ NON_SCOPED_STMT: VARIABLE ASSIGN_OP EXPR                  {
         }
     | VARIABLE ASSIGN EXPR                                { 
             fprintf(stdout, "Assignment statement\n");
-            
-            if (symbolTables.getVarType($1) != $3.type){
+            int type = symbolTables.getVarType($1);
+            if (type == 4){
+                fprintf(stderr, "Error:%d: variable %s not declared\n", yylineno, $1);
+            }
+            else if (type != $3.type){
                 fprintf(stderr, "Error:%d: Type mismatch in assignment\n", yylineno);
             }
             
@@ -224,7 +233,10 @@ EXPR: VARIABLE INC                            {
             $$.var = tempVars[tempCount++].data();
 
             int type = symbolTables.getVarType($1);
-            if (type > 1){
+            if (type == 4){
+                fprintf(stderr, "Error:%d: variable %s not declared\n", yylineno, $1);
+            }
+            else if (type > 1){
                 fprintf(stderr, "Error:%d: increment not available for type %s\n", yylineno, dataTypes[type].c_str());
             }
             $$.type = type;
@@ -236,7 +248,10 @@ EXPR: VARIABLE INC                            {
             $$.var = tempVars[tempCount++].data();
             
             int type = symbolTables.getVarType($1);
-            if (type > 1){
+            if (type == 4){
+                fprintf(stderr, "Error:%d: variable %s not declared\n", yylineno, $1);
+            }
+            else if (type > 1){
                 fprintf(stderr, "Error:%d: decrement not available for type %s\n", yylineno, dataTypes[type].c_str());
             }
             $$.type = type;
@@ -267,7 +282,14 @@ EXPR: VARIABLE INC                            {
 
     | BOOL_EXPR                               { fprintf(stdout, "BOOL_EXPR \n"); $$.var = $1.var; $$.type = 3;}
     | '(' EXPR ')'                            { fprintf(stdout, "(EXPR)\n"); $$.var = $2.var; $$.type = $2.type;}
-    | VARIABLE                                { fprintf(stdout, "VARIABLE\n"); $$.var = $1; $$.type = symbolTables.getVarType($1);}
+    | VARIABLE                                { 
+            fprintf(stdout, "VARIABLE\n");
+            $$.var = $1;
+            $$.type = symbolTables.getVarType($1);
+            if ($$.type == 4){
+                fprintf(stderr, "Error:%d: variable %s not declared\n", yylineno, $1);
+            }
+        }
     | DATA_LITERALS                           { fprintf(stdout, "DATA_LITERALS\n"); $$.var = $1.var; $$.type = $1.type;}
 
     // | INC VARIABLE                            { fprintf(stdout, "Prefix INC\n"); }
@@ -336,7 +358,16 @@ SCOPED_STMT: IF_COND BLOCK                                 {
             // jump to end if false
             opTables.editJumpQuad(reinterpret_cast<OperationEntry*>($1.jmpEnd), opTables.createLabelQuad());
         }
-    | SWITCH '(' VARIABLE ')' OPENSCOPE CASES CLOSESCOPE                            { fprintf(stdout, "SWITCH statement\n"); }
+    | SWITCH_HEAD OPENSCOPE CASES CLOSESCOPE                            { fprintf(stdout, "SWITCH statement\n"); }
+
+SWITCH_HEAD: SWITCH '(' VARIABLE ')'                                    {
+            int type = symbolTables.getVarType($3);
+            if (type == 4){
+                fprintf(stderr, "Error:%d: variable %s not declared\n", yylineno, $3);
+            }
+            switchVars.push_back($3);
+            switchVarsTypes.push_back(type);
+        }
 
 FOR_HEAD :  FOR_STMT FOR_COND NON_SCOPED_STMT ')'                                            {
             OperationEntry* ptr = opTables.addQuad(27, stringTrue, "NULL", "NULL");
@@ -372,17 +403,32 @@ ELSE_TOK: ELSE                                                          {
 CASES: CASE_STMT
     | CASE_STMT CASES
 
-CASE_STMT: DEFAULT ':' BLOCK
-    | CASE DATA_LITERALS ':' BLOCK
+CASE_STMT: CASE_STMT_COND BLOCK                                 {
+            fprintf(stdout, "CASE_STMT\n");
 
+            opTables.editJumpQuad(reinterpret_cast<OperationEntry*>($1), $2.close);
+        }
+
+CASE_STMT_COND: CASE DATA_LITERALS ':' {
+            int type = switchVarsTypes[switchVarsTypes.size()-1];
+            if (type != $2.type){
+                fprintf(stderr, "Error:%d: Type mismatch in switch case\n", yylineno);
+            }
+
+            opTables.addQuad(4, $2.var, switchVars[switchVars.size()-1], tempVars[tempCount]);
+            // jump if false
+            $$ = opTables.addQuad(28, tempVars[tempCount], "NULL", "NULL");
+        }
 // - [ ] Functions.
 SCOPED_STMT: FUNCTION STMT_LIST_EPS 
 
-FUNCTION: FUNCTION_START '(' PARAMS ')' OPENSCOPE STMT_LIST_EPS RETURN EXPR ';' CLOSESCOPE       { 
+FUNCTION: FUNCTION_START '(' PARAMS ')' OPENSCOPE STMT_LIST_EPS  RETURN EXPR ';' CLOSESCOPE       { 
             fprintf(stdout, "Function declaration\n"); 
             // addSymbol($1, !IS_CONST, IS_FUNC, !IS_SET, $2, yylineno);
             if ($1.symbol != NULL)
                 reinterpret_cast<SymbolEntry*>($1.symbol)->setFunctionSymbol(argTypes);
+            
+            opTables.addQuad(32, "NULL", "NULL", "NULL");
             argTypes.clear();
             symbolTables.endFunction();
             opTables.endFunction();
@@ -410,11 +456,47 @@ FUNCTION_START : DATA_TYPE VARIABLE         {
 
 EXPR: VARIABLE '(' PASSED_PARAMS ')'        { 
     fprintf(stdout, "Function call\n");
-    //TODO: handle function call    
+    // check if function exists
+    SymbolEntry* func = symbolTables.getSymbol($1);
+    bool valid = true;
+    if (func == NULL){
+        fprintf(stderr, "Error:%d: Function %s not declared\n", yylineno, $1);
+        valid = false;
+    }
+    else{
+        // check if number of arguments match
+        if (passedArgs.size() != func->argTypes.size()){
+            fprintf(stderr, "Error:%d: Number of arguments in function call to %s does not match\n", yylineno, $1);
+            valid = false;
+        }
+        else{
+            // check if types of arguments match
+            for (int i = 0; i < passedArgs.size(); i++){
+                if (passedArgsTypes[i] != func->argTypes[i]){
+                    valid = false;
+                    fprintf(stderr, "Error:%d: Type of argument %d in function call to %s does not match\n", yylineno, i+1, $1);
+                }
+            }
+        }
+    }
+    if (valid){
+        vector<string> args = symbolTables.getFunctionParams($1, passedArgs.size());
+        opTables.setFunctionParams(args, passedArgs, $1);
+        string name = $1;
+        opTables.addQuad(31, $1, "NULL", "LBL:" + name + ":0");
+    }
+    passedArgs.clear();
+    passedArgsTypes.clear();
 }
 
-PASSED_PARAMS: EXPR
-    | PASSED_PARAMS ',' EXPR
+PASSED_PARAMS: EXPR                         {
+            passedArgs.push_back($1.var);
+            passedArgsTypes.push_back($1.type);
+        }
+    | PASSED_PARAMS ',' EXPR                {
+            passedArgs.push_back($3.var);
+            passedArgsTypes.push_back($3.type);
+        }
 
 PARAMS: DATA_TYPE VARIABLE                  { 
             argTypes.push_back($1);
@@ -431,28 +513,24 @@ PARAMS: DATA_TYPE VARIABLE                  {
 DATA_LITERALS: INT_LITERAL                  {
             fprintf(stdout, "INT_LITERAL \n");
             opTables.addQuad(29, $1, "NULL", tempVars[tempCount]);
-            tempVarsType[tempCount] = 0;
             $$.var = tempVars[tempCount++].data();
             $$.type = 0;
         }
     | FLOAT_LITERAL                         {
             fprintf(stdout, "FLOAT_LITERAL\n");
             opTables.addQuad(29, $1, "NULL", tempVars[tempCount]);
-            tempVarsType[tempCount] = 1;
             $$.var = tempVars[tempCount++].data();
             $$.type = 1;
         }
     | CHAR_LITERAL                          {
             fprintf(stdout, "CHAR_LITERAL\n");
             opTables.addQuad(29, $1, "NULL", tempVars[tempCount]);
-            tempVarsType[tempCount] = 2;
             $$.var = tempVars[tempCount++].data();
             $$.type = 2;
         }
     | BOOL_LITERAL                          {
             fprintf(stdout, "BOOL_LITERAL\n");
             opTables.addQuad(29, $1, "NULL", tempVars[tempCount]);
-            tempVarsType[tempCount] = 3;
             $$.var = tempVars[tempCount++].data();
             $$.type = 3;
         }

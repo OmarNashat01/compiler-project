@@ -34,3 +34,4 @@
 | 28 |    `JMPF`   |Jump False |
 | 29 |    `SETLiteral`   |Set Literal |
 | 30 |    `SETLabel`   |Set Label |
+| 31 |    `CALL`   |call function |

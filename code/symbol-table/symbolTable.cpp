@@ -95,6 +95,7 @@ void SymbolEntry::printSymbolEntry(FILE *fp)
 SymbolTable::SymbolTable()
 {
     // Constructor
+    this->scope = 0;
 }
 
 SymbolTable::~SymbolTable()
@@ -115,13 +116,31 @@ int SymbolTable::getVarType(string name)
         if (ptr->scope < searchingScope)
             searchingScope = ptr->scope;
 
-        if (searchingScope != this->scope)
+        if (ptr->scope != searchingScope)
             continue;
 
-        if (ptr->equalTo(name, this->scope))
+        if (ptr->equalTo(name, searchingScope))
             return ptr->type;
     }
-    return -1;
+    return 4;
+}
+
+SymbolEntry *SymbolTable::getSymbol(string name)
+{
+    // Check if the symbol is a function
+    int searchingScope = this->scope;
+    for (auto ptr : this->table)
+    {
+        if (ptr->scope < searchingScope)
+            searchingScope = ptr->scope;
+
+        if (ptr->scope != searchingScope)
+            continue;
+
+        if (ptr->equalTo(name, searchingScope) && ptr->isFunctionSymbol)
+            return ptr;
+    }
+    return NULL;
 }
 
 SymbolEntry *SymbolTable::addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int lineNum)
@@ -187,6 +206,11 @@ int SymbolTables::getVarType(string name)
     return this->tables[this->currentScope]->getVarType(name);
 }
 
+SymbolEntry *SymbolTables::getSymbol(string name)
+{
+    return this->tables[this->currentScope]->getSymbol(name);
+}
+
 SymbolEntry *SymbolTables::addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int lineNum)
 {
     // Add a symbol to the symbol table
@@ -211,6 +235,20 @@ void SymbolTables::startFunction(string name)
     this->tables.insert(make_pair(this->currentScope, new SymbolTable()));
 }
 
+vector<string> SymbolTables::getFunctionParams(string name, int argCount)
+{
+    // Get the parameters of the function
+    vector<string> params;
+    SymbolTable *funcTable = this->tables[name];
+    // retrieve last argCount symbols
+    for (int i = 0; i < argCount; i++)
+    {
+        SymbolEntry *param = funcTable->table[funcTable->table.size() - 1 - i];
+        params.push_back(param->name);
+    }
+    return params;
+}
+
 void SymbolTables::printSymbolTables()
 {
     // Print the symbol table
@@ -223,7 +261,7 @@ void SymbolTables::printSymbolTables()
 
     for (auto ptr : this->tables)
     {
-        fprintf(fp, "Scope: %s\n", ptr.first.c_str());
+        fprintf(fp, "Table: %s\n", ptr.first.c_str());
         fflush(fp);
         ptr.second->printSymbolTable(fp);
     }

@@ -1,8 +1,8 @@
 ============START OF PROGRAM===========
-FLOAT_LITERAL
+INT_LITERAL 
 DATA_LITERALS
 Variable declaration with assignment
-var :1:x 
+var :0:x 
 res: t1
 INT_LITERAL 
 DATA_LITERALS
@@ -22,38 +22,31 @@ DATA_LITERALS
 Variable declaration with assignment
 var :0:y 
 res: t1
+Lbl_1
+INT_LITERAL 
+Lbl_2
 INT_LITERAL 
 DATA_LITERALS
-Variable declaration with assignment
-var :0:i 
-res: t1
-VARIABLE
-INT_LITERAL 
-DATA_LITERALS
-EXPR (1) EXPR
-i INC
-Floating EXPR statement
+Assignment statement
 Lbl_3
-VARIABLE
-VARIABLE
-EXPR (0) EXPR
-IF_COND
+CASE_STMT
+INT_LITERAL 
 Lbl_4
-x INC
-Floating EXPR statement
+INT_LITERAL 
+DATA_LITERALS
+Assignment statement
 Lbl_5
-ELSE_TOK
+CASE_STMT
 Lbl_6
-y INC
-Floating EXPR statement
+SWITCH statement
+INT_LITERAL 
+DATA_LITERALS
 Lbl_7
-IF-ELSE statement
-Lbl_8
-FOR loop statement
-VARIABLE
-VARIABLE
-EXPR (2) EXPR
-BOOL_EXPR 
-Lbl_10
 Function declaration
+INT_LITERAL 
+DATA_LITERALS
+INT_LITERAL 
+DATA_LITERALS
+Function call
+Floating EXPR statement
 ============END OF PROGRAM===========

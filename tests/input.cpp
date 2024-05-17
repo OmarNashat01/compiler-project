@@ -1,20 +1,29 @@
-float x = 2.0;
+int x = 2;
 int y = 1 + x++;
 
-int main()
+// asdasd
+
+/*asdasda
+asdasd
+asdasda
+*/
+
+int main(int f, int g)
 {
-    int x = 2;
-    int y = 0;
-    for (int i = 0; i < 10; i++)
+    int x = 0;
+    int y = 2;
+    switch (x)
     {
-        if (x > y)
-        {
-            x++;
-        }
-        else
-        {
-            y++;
-        }
+    case 1:
+    {
+        y = 1;
     }
-    return x >= y;
+    case 2:
+    {
+        y = 2;
+    }
+    }
+    return 1;
 }
+
+main(1, 2);

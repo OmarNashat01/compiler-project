@@ -52,6 +52,8 @@ public:
     void editJumpQuad(OperationEntry *entry, int jmpID);
     int createLabelQuad();
 
+    void setFunctionParams(vector<string> args, vector<string> params, string funcName);
+
     void startFunction(string name);
     void endFunction();
     void printFunctionsTables();

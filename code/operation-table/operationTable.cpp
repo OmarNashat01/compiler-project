@@ -37,7 +37,9 @@ vector<string> operationType = {
     "JMP",
     "JMPF",
     "SETLiteral",
-    "SetLabel"};
+    "SetLabel",
+    "CALL",
+    "RET"};
 
 OperationEntry::OperationEntry(int op, string arg1, string arg2, string res)
 {
@@ -165,6 +167,14 @@ void OperationTables::startFunction(string name)
 {
     currentFunction = name;
     tables[currentFunction] = new OperationTable();
+}
+
+void OperationTables::setFunctionParams(vector<string> args, vector<string> params, string funcName)
+{
+    for (int i = 0; i < args.size(); i++)
+    {
+        tables[currentFunction]->addQuad(19, params[i], "NULL", args[i]);
+    }
 }
 
 void OperationTables::endFunction()

@@ -21,6 +21,9 @@ public:
 	int lineNum;
 	int scope;
 	int type;
+	bool isFunctionSymbol;
+	vector<int> argTypes;
+	string name;
 
 private:
 	static int SymbolID;
@@ -29,9 +32,6 @@ private:
 	bool isConst;
 	bool isUsed;
 	bool isSet;
-	bool isFunctionSymbol;
-	string name;
-	vector<int> argTypes;
 };
 
 class SymbolTable
@@ -42,14 +42,16 @@ public:
 	SymbolEntry *addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int LineNum);
 
 	int getVarType(string name);
+	SymbolEntry *getSymbol(string name);
 
 	void addScope() { scope++; }
 	void removeScope() { scope--; }
 
 	void printSymbolTable(FILE *fp);
 
-private:
 	vector<SymbolEntry *> table;
+
+private:
 	int scope;
 };
 
@@ -62,6 +64,9 @@ public:
 	SymbolEntry *addSymbol(int type, bool isConstant, bool isFunction, bool isSet, string name, int LineNum);
 
 	int getVarType(string name);
+	SymbolEntry *getSymbol(string name);
+
+	vector<string> getFunctionParams(string name, int argCount);
 
 	void addScope();
 	void removeScope();
