@@ -5,7 +5,7 @@ from customtkinter import filedialog, CTkFrame, CTkTextbox, CTkButton, CTkToplev
 import pandas as pd
 from pandastable import Table, TableModel
 
-import subprocess
+import os
 
 
 class FileTableApp:
@@ -74,23 +74,40 @@ class FileTableApp:
 
     def compile_and_show(self):
         exe_path = "build\\c_compiler.exe"
-        # Create a PIPE for capturing standard output
-        process = subprocess.Popen(
-            [exe_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        # Encode input for compatibility (adjust encoding if needed)
-        input_text = self.textArea.get("1.0", tk.END)
-        encoded_input = input_text.encode('utf-8')
-        # Send input to the EXE
-        process.stdin.write(encoded_input)
-        # Close standard input to prevent accidental mixing with output
-        process.stdin.close()
-        # Capture output and potential errors
-        output, error = process.communicate()
-        # Decode output for readability (adjust encoding if needed)
-        decoded_output = output.decode('utf-8')
+        with open("temp.cpp", "w") as file:
+            file.write(self.textArea.get("1.0", tk.END))
 
-        print(decoded_output, error)
+        try:
+            os.system(f"cmd /c type temp.cpp | {exe_path}")
+            self.display_text_table("tests/operationTable.txt", "OP table")
+            self.display_text_table("tests/symbolTable.txt", "Symbol table")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+
+        os.remove("temp.cpp")
+
+    def display_text_table(self, file_path, title="Table Window"):
+        try:
+            with open(file_path, "r") as file:
+                content = file.read()
+
+            # Create a new window
+            table_window = CTkToplevel(self.root)
+            table_window.title(title)
+
+            # Create a frame to hold the table
+            table_frame = CTkFrame(table_window)
+            table_frame.pack(expand=True, pady=10)
+
+            # Create the table
+            table = CTkTextbox(table_frame,
+                               font=("Arial", 12), wrap=tk.NONE, width=500, height=500)
+            table.insert(tk.END, content)
+            table.pack(expand=True, fill=tk.BOTH)
+
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
 
     def display_table(self, file_path):
         try:

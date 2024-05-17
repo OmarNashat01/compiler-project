@@ -1,0 +1,9 @@
+Function: global
+Operation Table
+OP        |arg1      |arg2      |Result    
+==========|==========|==========|==========
+SETLiteral|0         |NULL      |t1        
+----------|----------|----------|----------
+=         |t1        |NULL      |x         
+----------|----------|----------|----------
+End of Operation Table
